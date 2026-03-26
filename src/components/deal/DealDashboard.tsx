@@ -15,15 +15,17 @@ import { SensitivityAnalysis } from '@/components/analysis/SensitivityAnalysis';
 import { ScenarioPlanning } from '@/components/analysis/ScenarioPlanning';
 import { InternationalTaxPanel } from '@/components/analysis/InternationalTaxPanel';
 import { ComparableProperties } from '@/components/market/ComparableProperties';
+import { getShareUrl } from '@/lib/utils/shareUtils';
 import {
   ArrowLeft, Plus, Building2, TrendingUp, Home, BarChart3,
-  Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare,
+  Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare, Share2,
 } from 'lucide-react';
 
 interface Props {
   deal: Deal;
   onNewDeal: () => void;
   onBack: () => void;
+  readOnly?: boolean;
 }
 
 type Tab =
@@ -39,8 +41,17 @@ type Tab =
   | 'chat'
   | 'risks';
 
-export function DealDashboard({ deal, onNewDeal, onBack }: Props) {
+export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const url = getShareUrl(deal);
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
   const { analysis } = deal;
 
   if (!analysis) return null;
@@ -90,6 +101,14 @@ export function DealDashboard({ deal, onNewDeal, onBack }: Props) {
           </div>
 
           <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
+            <span className="hidden sm:block">{copied ? 'Copied!' : 'Share'}</span>
+          </button>
+
+          <button
             onClick={() => exportDealToPDF(deal)}
             className="flex items-center gap-1.5 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors"
           >
@@ -97,13 +116,15 @@ export function DealDashboard({ deal, onNewDeal, onBack }: Props) {
             <span className="hidden sm:block">PDF</span>
           </button>
 
-          <button
-            onClick={onNewDeal}
-            className="flex items-center gap-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:block">New Deal</span>
-          </button>
+          {!readOnly && (
+            <button
+              onClick={onNewDeal}
+              className="flex items-center gap-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:block">New Deal</span>
+            </button>
+          )}
         </div>
       </header>
 
