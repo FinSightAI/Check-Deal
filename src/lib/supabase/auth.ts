@@ -1,10 +1,10 @@
 import { supabase } from './client';
 
-export async function signInWithGitHub() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
+export async function signInWithEmail(email: string) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
     options: {
-      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+      emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
     },
   });
   if (error) throw error;
