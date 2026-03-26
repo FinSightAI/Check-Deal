@@ -16,6 +16,7 @@ import { ScenarioPlanning } from '@/components/analysis/ScenarioPlanning';
 import { InternationalTaxPanel } from '@/components/analysis/InternationalTaxPanel';
 import { ComparableProperties } from '@/components/market/ComparableProperties';
 import { getShareUrl } from '@/lib/utils/shareUtils';
+import { AuthButton } from '@/components/auth/AuthButton';
 import {
   ArrowLeft, Plus, Building2, TrendingUp, Home, BarChart3,
   Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare, Share2,
@@ -136,6 +137,8 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
             <Download className="w-4 h-4" />
             <span className="hidden sm:block">PDF</span>
           </button>
+
+          <AuthButton variant="light" />
 
           {!readOnly && (
             <button

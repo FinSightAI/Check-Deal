@@ -90,6 +90,7 @@ interface DealStore {
   setAnalysis: (analysis: DealAnalysis) => void;
   setAnalyzing: (v: boolean) => void;
   setAnalysisError: (error: string | null) => void;
+  setDeals: (deals: Deal[]) => void;
 }
 
 export const useDealStore = create<DealStore>()(
@@ -163,6 +164,7 @@ export const useDealStore = create<DealStore>()(
 
       setAnalyzing: (v) => set({ isAnalyzing: v }),
       setAnalysisError: (error) => set({ analysisError: error }),
+      setDeals: (deals) => set({ deals }),
     }),
     {
       name: 'checkdeal-store',
