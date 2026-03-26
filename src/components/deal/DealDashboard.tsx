@@ -44,13 +44,30 @@ type Tab =
 export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
-  const handleShare = () => {
-    const url = getShareUrl(deal);
-    navigator.clipboard.writeText(url).then(() => {
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const longUrl = getShareUrl(deal);
+      const res = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: longUrl }),
+      });
+      const { short } = await res.json();
+      await navigator.clipboard.writeText(short);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // fallback
+      const url = getShareUrl(deal);
+      navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } finally {
+      setSharing(false);
+    }
   };
   const { analysis } = deal;
 
@@ -102,10 +119,14 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
 
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors"
+            disabled={sharing}
+            className="flex items-center gap-1.5 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
           >
-            <Share2 className="w-4 h-4" />
-            <span className="hidden sm:block">{copied ? 'Copied!' : 'Share'}</span>
+            {sharing
+              ? <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              : <Share2 className="w-4 h-4" />
+            }
+            <span className="hidden sm:block">{copied ? '✓ Copied!' : sharing ? 'Shortening…' : 'Share'}</span>
           </button>
 
           <button
