@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#3b82f6"/>
+  <rect x="80" y="160" width="352" height="240" rx="16" fill="white" opacity="0.15"/>
+  <rect x="80" y="160" width="352" height="240" rx="16" fill="none" stroke="white" stroke-width="16"/>
+  <!-- Building icon -->
+  <rect x="176" y="200" width="64" height="160" rx="8" fill="white"/>
+  <rect x="272" y="240" width="64" height="120" rx="8" fill="white" opacity="0.8"/>
+  <rect x="128" y="260" width="40" height="100" rx="8" fill="white" opacity="0.6"/>
+  <!-- Trend line -->
+  <polyline points="110,340 200,280 290,300 400,200" fill="none" stroke="#93c5fd" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="400" cy="200" r="12" fill="#93c5fd"/>
+</svg>
