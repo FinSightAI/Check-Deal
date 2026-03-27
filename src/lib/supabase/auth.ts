@@ -10,6 +10,16 @@ export async function signInWithEmail(email: string) {
   if (error) throw error;
 }
 
+export async function signInWithGitHub() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: {
+      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+    },
+  });
+  if (error) throw error;
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }

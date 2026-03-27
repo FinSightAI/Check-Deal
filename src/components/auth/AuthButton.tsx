@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { supabase, supabaseEnabled } from '@/lib/supabase/client';
-import { signInWithEmail, signOut } from '@/lib/supabase/auth';
+import { signInWithEmail, signInWithGitHub, signOut } from '@/lib/supabase/auth';
 import { fetchDeals, saveDeal } from '@/lib/supabase/deals';
 import { useDealStore } from '@/lib/store/dealStore';
 import type { User } from '@supabase/supabase-js';
-import { LogOut, Cloud, Mail } from 'lucide-react';
+import { LogOut, Cloud, Mail, Github } from 'lucide-react';
 
 interface Props {
   variant?: 'light' | 'dark';
@@ -126,9 +126,15 @@ export function AuthButton({ variant = 'dark' }: Props) {
   }
 
   return (
-    <button onClick={() => setShowForm(true)} className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg transition-colors ${baseBtn}`}>
-      <Mail className="w-4 h-4" />
-      <span className="hidden sm:block">Sign in to sync</span>
-    </button>
+    <div className="flex items-center gap-2">
+      <button onClick={() => setShowForm(true)} className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg transition-colors ${baseBtn}`}>
+        <Mail className="w-4 h-4" />
+        <span className="hidden sm:block">Email</span>
+      </button>
+      <button onClick={signInWithGitHub} className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg transition-colors ${baseBtn}`}>
+        <Github className="w-4 h-4" />
+        <span className="hidden sm:block">GitHub</span>
+      </button>
+    </div>
   );
 }
