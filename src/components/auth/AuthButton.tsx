@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { supabase, supabaseEnabled } from '@/lib/supabase/client';
 import { signInWithEmail, signOut } from '@/lib/supabase/auth';
 import { fetchDeals, saveDeal } from '@/lib/supabase/deals';
 import { useDealStore } from '@/lib/store/dealStore';
@@ -23,10 +23,11 @@ export function AuthButton({ variant = 'dark' }: Props) {
   const { deals, setDeals } = useDealStore();
 
   useEffect(() => {
+    if (!supabaseEnabled) { setLoading(false); return; }
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const u = session?.user ?? null;
