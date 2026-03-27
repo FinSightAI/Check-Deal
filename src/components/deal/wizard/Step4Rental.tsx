@@ -4,6 +4,7 @@ import { useDealStore } from '@/lib/store/dealStore';
 import { RentalStrategy } from '@/lib/types/deal';
 import { estimateAirbnbPotential } from '@/lib/calculations/airbnb';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { RentalMarketInsight } from '@/components/rental/RentalMarketInsight';
 import { useEffect, useState } from 'react';
 
 interface Props {
@@ -73,6 +74,24 @@ export function Step4Rental({ onNext, onBack }: Props) {
         <h2 className="text-2xl font-bold text-slate-800">Rental Strategy</h2>
         <p className="text-slate-500 mt-1">How do you plan to generate income from this property?</p>
       </div>
+
+      {/* AI Market Estimate */}
+      {property.city && (
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-4">
+          <RentalMarketInsight
+            city={property.city}
+            neighborhood={property.neighborhood || ''}
+            state={property.state}
+            sizeSqm={property.sizeSqm}
+            rooms={property.rooms}
+            propertyType={property.propertyType}
+            userLtrRent={rental.ltr.monthlyRent || undefined}
+            userNightlyRate={rental.str.avgNightlyRate || undefined}
+            onApplyLtr={(rent) => updateLTR({ monthlyRent: rent })}
+            onApplyStr={(nightly) => updateSTR({ avgNightlyRate: nightly })}
+          />
+        </div>
+      )}
 
       {/* Strategy selector */}
       <div>

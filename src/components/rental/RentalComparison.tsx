@@ -2,6 +2,7 @@
 
 import { Deal, DealAnalysis } from '@/lib/types/deal';
 import { formatCurrency, formatPercent } from '@/lib/utils/formatters';
+import { RentalMarketInsight } from './RentalMarketInsight';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
@@ -25,6 +26,20 @@ export function RentalComparison({ deal, analysis }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* AI Market Insight */}
+      <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 rounded-xl p-4">
+        <RentalMarketInsight
+          city={deal.property.city}
+          neighborhood={deal.property.neighborhood || ''}
+          state={deal.property.state}
+          sizeSqm={deal.property.sizeSqm}
+          rooms={deal.property.rooms}
+          propertyType={deal.property.propertyType}
+          userLtrRent={deal.rentalAssumptions.ltr.monthlyRent || undefined}
+          userNightlyRate={deal.rentalAssumptions.str.avgNightlyRate || undefined}
+        />
+      </div>
+
       {/* Strategy recommendation */}
       {rentalAnalysis.strPremiumPercent !== 0 && showSTR && (
         <div className={`rounded-xl p-4 border ${rentalAnalysis.strPremiumPercent > 15 ? 'bg-emerald-50 border-emerald-200' : 'bg-blue-50 border-blue-200'}`}>
