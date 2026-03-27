@@ -15,11 +15,12 @@ import { SensitivityAnalysis } from '@/components/analysis/SensitivityAnalysis';
 import { ScenarioPlanning } from '@/components/analysis/ScenarioPlanning';
 import { InternationalTaxPanel } from '@/components/analysis/InternationalTaxPanel';
 import { ComparableProperties } from '@/components/market/ComparableProperties';
+import { DueDiligenceChecklist } from '@/components/deal/DueDiligenceChecklist';
 import { getShareUrl } from '@/lib/utils/shareUtils';
 import { AuthButton } from '@/components/auth/AuthButton';
 import {
   ArrowLeft, Plus, Building2, TrendingUp, Home, BarChart3,
-  Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare, Share2,
+  Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare, Share2, ClipboardList,
 } from 'lucide-react';
 
 interface Props {
@@ -40,7 +41,8 @@ type Tab =
   | 'intl-tax'
   | 'ai'
   | 'chat'
-  | 'risks';
+  | 'risks'
+  | 'checklist';
 
 export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -89,6 +91,7 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
     { id: 'ai', label: 'AI Insights', icon: Bot },
     { id: 'chat', label: 'Ask AI', icon: MessageSquare },
     { id: 'risks', label: 'Risks', icon: Shield, badge: String(riskFactors.filter(r => r.severity === 'high').length) },
+    { id: 'checklist', label: 'Due Diligence', icon: ClipboardList },
   ];
 
   const price = deal.property.agreedPrice || deal.property.askingPrice;
@@ -228,6 +231,7 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
         {activeTab === 'ai' && <AIInsightsPanel deal={deal} analysis={analysis} />}
         {activeTab === 'chat' && <AIChat deal={deal} analysis={analysis} />}
         {activeTab === 'risks' && <RisksTab riskFactors={riskFactors} />}
+        {activeTab === 'checklist' && <DueDiligenceChecklist deal={deal} />}
       </div>
     </div>
   );

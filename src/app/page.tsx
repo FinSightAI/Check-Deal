@@ -4,14 +4,17 @@ import { useState } from 'react';
 import { DealWizard } from '@/components/deal/DealWizard';
 import { DealDashboard } from '@/components/deal/DealDashboard';
 import { SavedDeals } from '@/components/deal/SavedDeals';
+import { DealComparison } from '@/components/deal/DealComparison';
 import { useDealStore } from '@/lib/store/dealStore';
+import { Deal } from '@/lib/types/deal';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { Building2, Plus, List, TrendingUp } from 'lucide-react';
 
-type View = 'home' | 'new-deal' | 'dashboard' | 'saved-deals';
+type View = 'home' | 'new-deal' | 'dashboard' | 'saved-deals' | 'compare';
 
 export default function HomePage() {
   const [view, setView] = useState<View>('home');
+  const [compareDeals, setCompareDeals] = useState<Deal[]>([]);
   const { currentDeal, deals, createDeal } = useDealStore();
 
   const handleNewDeal = () => {
@@ -42,6 +45,19 @@ export default function HomePage() {
     );
   }
 
+  if (view === 'compare') {
+    return (
+      <DealComparison
+        deals={compareDeals}
+        onBack={() => setView('saved-deals')}
+        onSelectDeal={(deal) => {
+          useDealStore.getState().setCurrentDeal(deal);
+          setView('dashboard');
+        }}
+      />
+    );
+  }
+
   if (view === 'saved-deals') {
     return (
       <SavedDeals
@@ -51,6 +67,10 @@ export default function HomePage() {
           setView('dashboard');
         }}
         onNewDeal={handleNewDeal}
+        onCompare={(selected) => {
+          setCompareDeals(selected);
+          setView('compare');
+        }}
       />
     );
   }
@@ -90,7 +110,7 @@ export default function HomePage() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 text-blue-300 text-sm mb-6">
             <TrendingUp className="w-4 h-4" />
-            Powered by Claude AI
+            Powered by Gemini AI
           </div>
           <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
             Is the deal
@@ -177,6 +197,6 @@ const FEATURES = [
   {
     icon: '🤖',
     title: 'AI Deal Insights',
-    desc: 'Claude AI analyzes your deal and provides specific advice on negotiation, tax optimization, and rental strategy.',
+    desc: 'Gemini AI analyzes your deal and provides specific advice on negotiation, tax optimization, and rental strategy.',
   },
 ];

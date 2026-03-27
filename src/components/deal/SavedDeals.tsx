@@ -1,18 +1,32 @@
 'use client';
 
+import { useState } from 'react';
 import { useDealStore } from '@/lib/store/dealStore';
 import { Deal } from '@/lib/types/deal';
 import { formatCurrency, formatPercent, getRatingColor, getRatingBg } from '@/lib/utils/formatters';
-import { ArrowLeft, Plus, Trash2, Building2, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Building2, Calendar, BarChart2, CheckSquare } from 'lucide-react';
 
 interface Props {
   onBack: () => void;
   onSelectDeal: (deal: Deal) => void;
   onNewDeal: () => void;
+  onCompare?: (deals: Deal[]) => void;
 }
 
-export function SavedDeals({ onBack, onSelectDeal, onNewDeal }: Props) {
+export function SavedDeals({ onBack, onSelectDeal, onNewDeal, onCompare }: Props) {
   const { deals, deleteDeal } = useDealStore();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const analyzedDeals = deals.filter(d => d.analysis);
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else if (next.size < 3) next.add(id);
+      return next;
+    });
+  };
+
+  const compareMode = selected.size > 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -27,6 +41,15 @@ export function SavedDeals({ onBack, onSelectDeal, onNewDeal }: Props) {
             </div>
             <span className="font-semibold text-slate-800">Saved Deals</span>
           </div>
+          {compareMode && onCompare && (
+            <button
+              onClick={() => onCompare(deals.filter(d => selected.has(d.id)))}
+              className="flex items-center gap-1.5 text-sm bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <BarChart2 className="w-4 h-4" />
+              Compare {selected.size}
+            </button>
+          )}
           <button
             onClick={onNewDeal}
             className="flex items-center gap-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -47,57 +70,80 @@ export function SavedDeals({ onBack, onSelectDeal, onNewDeal }: Props) {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {deals.map((deal) => (
-              <DealCard
-                key={deal.id}
-                deal={deal}
-                onSelect={() => onSelectDeal(deal)}
-                onDelete={() => deleteDeal(deal.id)}
-              />
-            ))}
-          </div>
+          <>
+            {analyzedDeals.length >= 2 && onCompare && (
+              <p className="text-xs text-slate-400 mb-3 flex items-center gap-1">
+                <CheckSquare className="w-3.5 h-3.5" />
+                Select up to 3 analyzed deals to compare side-by-side
+              </p>
+            )}
+            <div className="space-y-3">
+              {deals.map((deal) => (
+                <DealCard
+                  key={deal.id}
+                  deal={deal}
+                  onSelect={() => onSelectDeal(deal)}
+                  onDelete={() => { deleteDeal(deal.id); setSelected(prev => { const n = new Set(prev); n.delete(deal.id); return n; }); }}
+                  selectable={!!deal.analysis && !!onCompare}
+                  selected={selected.has(deal.id)}
+                  onToggleSelect={() => toggleSelect(deal.id)}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 }
 
-function DealCard({ deal, onSelect, onDelete }: { deal: Deal; onSelect: () => void; onDelete: () => void }) {
+function DealCard({
+  deal, onSelect, onDelete, selectable, selected, onToggleSelect,
+}: {
+  deal: Deal; onSelect: () => void; onDelete: () => void;
+  selectable?: boolean; selected?: boolean; onToggleSelect?: () => void;
+}) {
   const price = deal.property.agreedPrice || deal.property.askingPrice;
   const { analysis } = deal;
 
   return (
     <div
-      className="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-300 transition-colors cursor-pointer"
-      onClick={onSelect}
+      className={`bg-white border-2 rounded-xl p-5 transition-colors cursor-pointer ${selected ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-200 hover:border-blue-300'}`}
+      onClick={selectable ? onToggleSelect : onSelect}
     >
       <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-slate-800">{deal.name}</h3>
-            {analysis && (
-              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getRatingBg(analysis.dealScore.rating)}`}>
-                <span className={getRatingColor(analysis.dealScore.rating)}>
-                  {analysis.dealScore.total}/100
+        <div className="flex items-start gap-3 flex-1">
+          {selectable && (
+            <div className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${selected ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'}`}>
+              {selected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+            </div>
+          )}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-slate-800">{deal.name}</h3>
+              {analysis && (
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getRatingBg(analysis.dealScore.rating)}`}>
+                  <span className={getRatingColor(analysis.dealScore.rating)}>
+                    {analysis.dealScore.total}/100
+                  </span>
                 </span>
-              </span>
-            )}
-          </div>
-          <div className="text-sm text-slate-500">
-            {deal.property.neighborhood ? `${deal.property.neighborhood}, ` : ''}
-            {deal.property.city}, {deal.property.state} ·{' '}
-            {deal.property.rooms}BR {deal.property.propertyType} ·{' '}
-            {deal.property.sizeSqm}m²
-          </div>
-          <div className="flex gap-4 mt-2 text-sm">
-            <span className="font-semibold text-slate-700">{formatCurrency(price, 'BRL', true)}</span>
-            {analysis && (
-              <>
-                <span className="text-blue-600">Yield: {formatPercent(analysis.returns.grossYield)}</span>
-                <span className="text-emerald-600">Cap: {formatPercent(analysis.returns.capRate)}</span>
-              </>
-            )}
+              )}
+            </div>
+            <div className="text-sm text-slate-500">
+              {deal.property.neighborhood ? `${deal.property.neighborhood}, ` : ''}
+              {deal.property.city}, {deal.property.state} ·{' '}
+              {deal.property.rooms}BR {deal.property.propertyType} ·{' '}
+              {deal.property.sizeSqm}m²
+            </div>
+            <div className="flex gap-4 mt-2 text-sm">
+              <span className="font-semibold text-slate-700">{formatCurrency(price, 'BRL', true)}</span>
+              {analysis && (
+                <>
+                  <span className="text-blue-600">Yield: {formatPercent(analysis.returns.grossYield)}</span>
+                  <span className="text-emerald-600">Cap: {formatPercent(analysis.returns.capRate)}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2 ml-4">
@@ -105,6 +151,14 @@ function DealCard({ deal, onSelect, onDelete }: { deal: Deal; onSelect: () => vo
             <Calendar className="w-3 h-3" />
             {new Date(deal.updatedAt).toLocaleDateString()}
           </div>
+          {!selectable && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSelect(); }}
+              className="text-xs text-blue-500 hover:underline px-2"
+            >
+              Open
+            </button>
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
