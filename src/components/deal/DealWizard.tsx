@@ -7,7 +7,8 @@ import { Step2Property } from './wizard/Step2Property';
 import { Step3Financing } from './wizard/Step3Financing';
 import { Step4Rental } from './wizard/Step4Rental';
 import { Step5Review } from './wizard/Step5Review';
-import { ArrowLeft, Building2 } from 'lucide-react';
+import { ImportFromListing } from './ImportFromListing';
+import { ArrowLeft, Building2, Sparkles } from 'lucide-react';
 
 interface Props {
   onComplete: () => void;
@@ -16,6 +17,7 @@ interface Props {
 
 export function DealWizard({ onComplete, onBack }: Props) {
   const [step, setStep] = useState(1);
+  const [showImport, setShowImport] = useState(false);
   const totalSteps = 5;
 
   const STEPS = [
@@ -78,6 +80,31 @@ export function DealWizard({ onComplete, onBack }: Props) {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-8">
+        {/* Import button — shown on step 2 (property) */}
+        {step === 2 && !showImport && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowImport(true)}
+              className="flex items-center gap-2 text-sm bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2.5 rounded-xl transition-all shadow-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              Import from listing (ZAP / OLX / VivaReal)
+            </button>
+          </div>
+        )}
+
+        {step === 2 && showImport && (
+          <div className="mb-6">
+            <ImportFromListing onImported={() => setShowImport(false)} />
+            <button
+              onClick={() => setShowImport(false)}
+              className="mt-2 text-xs text-slate-400 hover:text-slate-600"
+            >
+              ← Fill manually instead
+            </button>
+          </div>
+        )}
+
         {step === 1 && <Step1BuyerProfile onNext={() => setStep(2)} />}
         {step === 2 && <Step2Property onNext={() => setStep(3)} onBack={() => setStep(1)} />}
         {step === 3 && <Step3Financing onNext={() => setStep(4)} onBack={() => setStep(2)} />}
