@@ -3,6 +3,7 @@
 import { useDealStore } from '@/lib/store/dealStore';
 import { PropertyType, PurchaseStrategy, ConditionType } from '@/lib/types/deal';
 import { BR_STATES } from '@/lib/constants/countries';
+import { RenovationEstimator } from '@/components/deal/RenovationEstimator';
 
 interface Props {
   onNext: () => void;
@@ -353,6 +354,11 @@ export function Step2Property({ onNext, onBack }: Props) {
             </div>
           </label>
         </div>
+      </div>
+
+      {/* Renovation estimator */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5">
+        <RenovationEstimator />
       </div>
 
       {/* Navigation */}

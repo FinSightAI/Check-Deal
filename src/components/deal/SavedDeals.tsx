@@ -2,9 +2,18 @@
 
 import { useState } from 'react';
 import { useDealStore } from '@/lib/store/dealStore';
-import { Deal } from '@/lib/types/deal';
+import { Deal, PipelineStatus } from '@/lib/types/deal';
 import { formatCurrency, formatPercent, getRatingColor, getRatingBg } from '@/lib/utils/formatters';
 import { ArrowLeft, Plus, Trash2, Building2, Calendar, BarChart2, CheckSquare } from 'lucide-react';
+
+const STATUS_STYLES: Record<PipelineStatus, { color: string; bg: string }> = {
+  exploring:      { color: 'text-slate-600',   bg: 'bg-slate-100' },
+  negotiating:    { color: 'text-blue-700',    bg: 'bg-blue-100' },
+  'due-diligence':{ color: 'text-amber-700',   bg: 'bg-amber-100' },
+  'offer-made':   { color: 'text-purple-700',  bg: 'bg-purple-100' },
+  closed:         { color: 'text-emerald-700', bg: 'bg-emerald-100' },
+  passed:         { color: 'text-red-600',     bg: 'bg-red-100' },
+};
 
 interface Props {
   onBack: () => void;
@@ -119,7 +128,7 @@ function DealCard({
             </div>
           )}
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <h3 className="font-semibold text-slate-800">{deal.name}</h3>
               {analysis && (
                 <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getRatingBg(analysis.dealScore.rating)}`}>
@@ -128,6 +137,14 @@ function DealCard({
                   </span>
                 </span>
               )}
+              {deal.pipelineStatus && deal.pipelineStatus !== 'exploring' && (() => {
+                const s = STATUS_STYLES[deal.pipelineStatus!];
+                return (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${s.bg} ${s.color}`}>
+                    {deal.pipelineStatus!.replace('-', ' ')}
+                  </span>
+                );
+              })()}
             </div>
             <div className="text-sm text-slate-500">
               {deal.property.neighborhood ? `${deal.property.neighborhood}, ` : ''}

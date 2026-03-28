@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Deal } from '@/lib/types/deal';
+import { Deal, PipelineStatus } from '@/lib/types/deal';
 import { formatCurrency, formatPercent, getRatingColor, getRatingBg, getSeverityColor } from '@/lib/utils/formatters';
 import { exportDealToPDF } from '@/lib/utils/pdfExport';
 import { MetricsOverview } from '@/components/analysis/MetricsOverview';
@@ -16,12 +16,25 @@ import { ScenarioPlanning } from '@/components/analysis/ScenarioPlanning';
 import { InternationalTaxPanel } from '@/components/analysis/InternationalTaxPanel';
 import { ComparableProperties } from '@/components/market/ComparableProperties';
 import { DueDiligenceChecklist } from '@/components/deal/DueDiligenceChecklist';
+import { NegotiationPanel } from '@/components/deal/NegotiationPanel';
+import { PFvsPJPanel } from '@/components/deal/PFvsPJPanel';
 import { getShareUrl } from '@/lib/utils/shareUtils';
 import { AuthButton } from '@/components/auth/AuthButton';
+import { useDealStore } from '@/lib/store/dealStore';
 import {
   ArrowLeft, Plus, Building2, TrendingUp, Home, BarChart3,
   Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare, Share2, ClipboardList,
+  Handshake, Scale, StickyNote,
 } from 'lucide-react';
+
+const PIPELINE_STATUSES: { id: PipelineStatus; label: string; color: string; bg: string }[] = [
+  { id: 'exploring', label: 'Exploring', color: 'text-slate-600', bg: 'bg-slate-100' },
+  { id: 'negotiating', label: 'Negotiating', color: 'text-blue-700', bg: 'bg-blue-100' },
+  { id: 'due-diligence', label: 'Due Diligence', color: 'text-amber-700', bg: 'bg-amber-100' },
+  { id: 'offer-made', label: 'Offer Made', color: 'text-purple-700', bg: 'bg-purple-100' },
+  { id: 'closed', label: 'Closed ✓', color: 'text-emerald-700', bg: 'bg-emerald-100' },
+  { id: 'passed', label: 'Passed ✗', color: 'text-red-600', bg: 'bg-red-100' },
+];
 
 interface Props {
   deal: Deal;
@@ -42,12 +55,31 @@ type Tab =
   | 'ai'
   | 'chat'
   | 'risks'
-  | 'checklist';
+  | 'checklist'
+  | 'negotiate'
+  | 'pf-pj';
 
 export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const { updateDeal, saveDeal } = useDealStore();
+
+  const pipelineStatus = deal.pipelineStatus ?? 'exploring';
+  const statusInfo = PIPELINE_STATUSES.find(s => s.id === pipelineStatus) ?? PIPELINE_STATUSES[0];
+
+  const setStatus = (s: PipelineStatus) => {
+    updateDeal({ pipelineStatus: s });
+    saveDeal();
+    setShowStatusMenu(false);
+  };
+
+  const saveNotes = (notes: string) => {
+    updateDeal({ userOverrides: { ...deal.userOverrides, notes } });
+    saveDeal();
+  };
 
   const handleShare = async () => {
     setSharing(true);
@@ -92,6 +124,8 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
     { id: 'chat', label: 'Ask AI', icon: MessageSquare },
     { id: 'risks', label: 'Risks', icon: Shield, badge: String(riskFactors.filter(r => r.severity === 'high').length) },
     { id: 'checklist', label: 'Due Diligence', icon: ClipboardList },
+    { id: 'negotiate', label: 'Negotiate', icon: Handshake },
+    { id: 'pf-pj', label: 'PF vs PJ', icon: Scale },
   ];
 
   const price = deal.property.agreedPrice || deal.property.askingPrice;
@@ -120,6 +154,42 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
               {dealScore.total}/100 · {dealScore.rating.toUpperCase()}
             </span>
           </div>
+
+          {/* Pipeline status */}
+          {!readOnly && (
+            <div className="relative hidden sm:block">
+              <button
+                onClick={() => setShowStatusMenu(v => !v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${statusInfo.bg} ${statusInfo.color}`}
+              >
+                {statusInfo.label} ▾
+              </button>
+              {showStatusMenu && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-20 min-w-[160px] overflow-hidden">
+                  {PIPELINE_STATUSES.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => setStatus(s.id)}
+                      className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 transition-colors ${s.color} ${pipelineStatus === s.id ? 'bg-slate-50' : ''}`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Notes toggle */}
+          {!readOnly && (
+            <button
+              onClick={() => setShowNotes(v => !v)}
+              className={`p-2 rounded-lg transition-colors ${showNotes ? 'bg-amber-100 text-amber-700' : 'hover:bg-slate-100 text-slate-500'}`}
+              title="Notes"
+            >
+              <StickyNote className="w-4 h-4" />
+            </button>
+          )}
 
           <button
             onClick={handleShare}
@@ -232,7 +302,29 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
         {activeTab === 'chat' && <AIChat deal={deal} analysis={analysis} />}
         {activeTab === 'risks' && <RisksTab riskFactors={riskFactors} />}
         {activeTab === 'checklist' && <DueDiligenceChecklist deal={deal} />}
+        {activeTab === 'negotiate' && <NegotiationPanel deal={deal} />}
+        {activeTab === 'pf-pj' && <PFvsPJPanel deal={deal} />}
       </div>
+
+      {/* Notes panel */}
+      {showNotes && !readOnly && (
+        <div className="fixed bottom-4 right-4 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl z-30">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <StickyNote className="w-4 h-4 text-amber-500" />
+              <span className="text-sm font-semibold text-slate-700">Deal Notes</span>
+            </div>
+            <button onClick={() => setShowNotes(false)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">×</button>
+          </div>
+          <textarea
+            className="w-full px-4 py-3 text-sm text-slate-700 resize-none focus:outline-none rounded-b-2xl"
+            rows={8}
+            placeholder="Notes about this deal — seller contact, inspection findings, negotiation status…"
+            defaultValue={deal.userOverrides.notes ?? ''}
+            onBlur={(e) => saveNotes(e.target.value)}
+          />
+        </div>
+      )}
     </div>
   );
 }

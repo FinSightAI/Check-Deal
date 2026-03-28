@@ -106,10 +106,13 @@ export interface UserOverrides {
   notes?: string;
 }
 
+export type PipelineStatus = 'exploring' | 'negotiating' | 'due-diligence' | 'offer-made' | 'closed' | 'passed';
+
 export interface Deal {
   id: string;
   name: string;
   status: 'draft' | 'analyzing' | 'complete';
+  pipelineStatus?: PipelineStatus;
   createdAt: string;
   updatedAt: string;
 
