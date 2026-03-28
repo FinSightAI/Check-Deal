@@ -5,12 +5,13 @@ import { DealWizard } from '@/components/deal/DealWizard';
 import { DealDashboard } from '@/components/deal/DealDashboard';
 import { SavedDeals } from '@/components/deal/SavedDeals';
 import { DealComparison } from '@/components/deal/DealComparison';
+import { PortfolioView } from '@/components/portfolio/PortfolioView';
 import { useDealStore } from '@/lib/store/dealStore';
 import { Deal } from '@/lib/types/deal';
 import { AuthButton } from '@/components/auth/AuthButton';
-import { Building2, Plus, List, TrendingUp } from 'lucide-react';
+import { Building2, Plus, List, TrendingUp, PieChart } from 'lucide-react';
 
-type View = 'home' | 'new-deal' | 'dashboard' | 'saved-deals' | 'compare';
+type View = 'home' | 'new-deal' | 'dashboard' | 'saved-deals' | 'compare' | 'portfolio';
 
 export default function HomePage() {
   const [view, setView] = useState<View>('home');
@@ -41,6 +42,19 @@ export default function HomePage() {
         deal={currentDeal}
         onNewDeal={handleNewDeal}
         onBack={() => setView('home')}
+      />
+    );
+  }
+
+  if (view === 'portfolio') {
+    return (
+      <PortfolioView
+        deals={deals}
+        onBack={() => setView('home')}
+        onSelectDeal={(deal) => {
+          useDealStore.getState().setCurrentDeal(deal);
+          setView('dashboard');
+        }}
       />
     );
   }
@@ -92,13 +106,24 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-2">
             {deals.length > 0 && (
-              <button
-                onClick={() => setView('saved-deals')}
-                className="flex items-center gap-2 text-slate-300 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
-              >
-                <List className="w-4 h-4" />
-                My Deals ({deals.length})
-              </button>
+              <>
+                <button
+                  onClick={() => setView('saved-deals')}
+                  className="flex items-center gap-2 text-slate-300 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <List className="w-4 h-4" />
+                  My Deals ({deals.length})
+                </button>
+                {deals.filter(d => d.analysis).length > 0 && (
+                  <button
+                    onClick={() => setView('portfolio')}
+                    className="flex items-center gap-2 text-slate-300 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    <PieChart className="w-4 h-4" />
+                    Portfolio
+                  </button>
+                )}
+              </>
             )}
             <AuthButton variant="dark" />
           </div>

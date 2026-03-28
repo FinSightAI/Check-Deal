@@ -1,26 +1,66 @@
 'use client';
 
+import { useState } from 'react';
 import { Deal, DealAnalysis } from '@/lib/types/deal';
 import { formatCurrency, formatPercent, getRatingColor, getRatingBg } from '@/lib/utils/formatters';
 import { BRAZIL_SELIC_RATE } from '@/lib/constants/countries';
+
+type DisplayCurrency = 'BRL' | 'USD' | 'ILS';
 
 interface Props {
   deal: Deal;
   analysis: DealAnalysis;
 }
 
+function useCurrencyConvert(rates: Record<string, number>) {
+  const [currency, setCurrency] = useState<DisplayCurrency>('BRL');
+  const usdRate = rates.USD ?? 0.18;
+  const ilsRate = rates.ILS ?? 0.65; // fallback ≈ BRL→ILS
+
+  const convert = (brl: number): string => {
+    if (currency === 'BRL') return formatCurrency(brl, 'BRL');
+    if (currency === 'USD') return `$${(brl * usdRate).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    return `₪${(brl * ilsRate).toLocaleString('he-IL', { maximumFractionDigits: 0 })}`;
+  };
+
+  const convertLarge = (brl: number): string => {
+    if (currency === 'BRL') return formatCurrency(brl, 'BRL', true);
+    if (currency === 'USD') {
+      const v = brl * usdRate;
+      return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${(v / 1000).toFixed(0)}K`;
+    }
+    const v = brl * ilsRate;
+    return v >= 1_000_000 ? `₪${(v / 1_000_000).toFixed(1)}M` : `₪${(v / 1000).toFixed(0)}K`;
+  };
+
+  return { currency, setCurrency, convert, convertLarge };
+}
+
 export function MetricsOverview({ deal, analysis }: Props) {
   const { returns, dealScore, marketContext, financing } = analysis;
   const price = deal.property.agreedPrice || deal.property.askingPrice;
+  const { currency, setCurrency, convert, convertLarge } = useCurrencyConvert(marketContext.exchangeRates);
 
   const yr10 = returns.projections.find((p) => p.years === 10);
   const yr5 = returns.projections.find((p) => p.years === 5);
 
-  // Exchange rate display
-  const priceUSD = price * (marketContext.exchangeRates.USD ?? 0.18);
-
   return (
     <div className="space-y-6">
+      {/* Currency toggle */}
+      <div className="flex justify-end">
+        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 gap-0.5">
+          {(['BRL', 'USD', 'ILS'] as DisplayCurrency[]).map((c) => (
+            <button
+              key={c}
+              onClick={() => setCurrency(c)}
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${currency === c ? 'bg-blue-500 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              {c === 'BRL' ? 'R$' : c === 'USD' ? '$' : '₪'} {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Deal verdict */}
       <div className={`border rounded-2xl p-6 ${getRatingBg(dealScore.rating)}`}>
         <div className="flex items-start justify-between">
@@ -132,16 +172,16 @@ export function MetricsOverview({ deal, analysis }: Props) {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <div className="text-slate-500">Projected Value</div>
-                <div className="font-semibold">{formatCurrency(proj.projectedValue, 'BRL', true)}</div>
+                <div className="font-semibold">{convertLarge(proj.projectedValue)}</div>
               </div>
               <div>
                 <div className="text-slate-500">Equity Built</div>
-                <div className="font-semibold">{formatCurrency(proj.equityBuilt, 'BRL', true)}</div>
+                <div className="font-semibold">{convertLarge(proj.equityBuilt)}</div>
               </div>
               <div>
                 <div className="text-slate-500">Total Cash Flow</div>
                 <div className={`font-semibold ${proj.totalCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatCurrency(proj.totalCashFlow, 'BRL', true)}
+                  {convertLarge(proj.totalCashFlow)}
                 </div>
               </div>
               <div>
@@ -175,7 +215,7 @@ export function MetricsOverview({ deal, analysis }: Props) {
               R${(1 / (marketContext.exchangeRates.USD ?? 0.18)).toFixed(2)}
             </div>
             <div className="text-xs text-slate-400">
-              Price ≈ ${(price * (marketContext.exchangeRates.USD ?? 0.18)).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              Price ≈ {convertLarge(price)}
             </div>
           </div>
           <div>

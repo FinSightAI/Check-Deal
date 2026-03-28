@@ -327,6 +327,32 @@ export function Step2Property({ onNext, onBack }: Props) {
             </div>
           </label>
         </div>
+
+        {/* Broker commission */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={(currentDeal?.userOverrides.customBrokerFee ?? 0) > 0}
+              onChange={(e) => {
+                const price = property.agreedPrice || property.askingPrice || 0;
+                updateDeal({ userOverrides: { ...currentDeal?.userOverrides, customBrokerFee: e.target.checked ? price * 0.06 : 0 } });
+              }}
+              className="w-4 h-4 accent-amber-500 mt-0.5"
+            />
+            <div>
+              <div className="text-sm font-medium text-amber-800">Buyer pays broker commission (6%)</div>
+              <div className="text-xs text-amber-600 mt-0.5">
+                In Brazil, the 6% corretagem is traditionally paid by the seller. Check only if explicitly agreed otherwise.
+                {(currentDeal?.userOverrides.customBrokerFee ?? 0) > 0 && (
+                  <span className="font-semibold ml-1">
+                    ≈ R${((property.agreedPrice || property.askingPrice || 0) * 0.06).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} added to costs.
+                  </span>
+                )}
+              </div>
+            </div>
+          </label>
+        </div>
       </div>
 
       {/* Navigation */}
