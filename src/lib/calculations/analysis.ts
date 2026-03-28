@@ -5,7 +5,7 @@ import { buildCashFlows, calculateReturnMetrics, calculateDealScore } from './re
 import { calculateRentalAnalysis } from './airbnb';
 import { BRAZIL_SELIC_RATE, BRAZIL_IPCA_INFLATION, COUNTRIES } from '@/lib/constants/countries';
 
-export async function runDealAnalysis(deal: Deal, exchangeRates?: Record<string, number>): Promise<DealAnalysis> {
+export async function runDealAnalysis(deal: Deal, exchangeRates?: Record<string, number>, liveRates?: { selic?: number; ipca?: number }): Promise<DealAnalysis> {
   const { property, financing, buyerProfile, rentalAssumptions, userOverrides } = deal;
   const price = property.agreedPrice || property.askingPrice;
 
@@ -30,7 +30,8 @@ export async function runDealAnalysis(deal: Deal, exchangeRates?: Record<string,
   // ── Step 4: Cash flows ────────────────────────────────────────────────────
   const appreciationRate = userOverrides.appreciationRateOverride ??
     COUNTRIES['BR'].defaultAppreciation;
-  const inflationRate = BRAZIL_IPCA_INFLATION;
+  const inflationRate = liveRates?.ipca ?? BRAZIL_IPCA_INFLATION;
+  const selicRate = liveRates?.selic ?? BRAZIL_SELIC_RATE;
 
   const annualRent = rentalAssumptions.ltr.monthlyRent * 12;
   const annualOperatingCosts = annualCosts.total;
@@ -75,7 +76,7 @@ export async function runDealAnalysis(deal: Deal, exchangeRates?: Record<string,
   };
 
   // ── Step 8: Risk factors ──────────────────────────────────────────────────
-  const riskFactors = identifyRiskFactors(deal, returns, financingCalc.effectiveAnnualRate);
+  const riskFactors = identifyRiskFactors(deal, returns, financingCalc.effectiveAnnualRate, selicRate);
 
   // ── Step 9: Market context ────────────────────────────────────────────────
   // Typical São Paulo yields: 4-7%
@@ -103,7 +104,7 @@ export async function runDealAnalysis(deal: Deal, exchangeRates?: Record<string,
       avgPricePerSqmArea,
       avgYieldArea,
       inflationRate,
-      selicRate: BRAZIL_SELIC_RATE,
+      selicRate: selicRate,
       exchangeRates: exchangeRates || { USD: 0.18, EUR: 0.165, ILS: 0.66 },
     },
   };
@@ -112,18 +113,19 @@ export async function runDealAnalysis(deal: Deal, exchangeRates?: Record<string,
 function identifyRiskFactors(
   deal: Deal,
   returns: ReturnMetrics,
-  mortgageRate: number
+  mortgageRate: number,
+  selicRate: number = BRAZIL_SELIC_RATE
 ): RiskFactor[] {
   const risks: RiskFactor[] = [];
   const { property, financing, buyerProfile } = deal;
 
   // High interest rate vs Selic
-  if (mortgageRate > BRAZIL_SELIC_RATE + 4) {
+  if (mortgageRate > selicRate + 4) {
     risks.push({
       category: 'financial',
       severity: 'high',
       title: 'High financing cost',
-      description: `Mortgage rate of ${mortgageRate.toFixed(1)}% is significantly above Selic (${BRAZIL_SELIC_RATE}%). Consider alternatives.`,
+      description: `Mortgage rate of ${mortgageRate.toFixed(1)}% is significantly above Selic (${selicRate}%). Consider alternatives.`,
       mitigation: 'Compare Caixa Econômica Federal rates, which may offer competitive rates for residential properties.',
     });
   }
@@ -179,7 +181,7 @@ function identifyRiskFactors(
     category: 'macro',
     severity: 'medium',
     title: 'Brazil interest rate risk',
-    description: `Brazil's Selic rate (${BRAZIL_SELIC_RATE}%) is high. Variable rate mortgages may become more expensive if rates rise.`,
+    description: `Brazil's Selic rate (${selicRate}%) is high. Variable rate mortgages may become more expensive if rates rise.`,
     mitigation: 'Prefer fixed-rate (TR + fixed spread) or SAC financing with Caixa to hedge against rate increases.',
   });
 

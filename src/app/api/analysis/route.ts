@@ -11,28 +11,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Deal data is required' }, { status: 400 });
     }
 
-    // Fetch exchange rates
-    let exchangeRates: Record<string, number> = { USD: 0.18, EUR: 0.165, ILS: 0.66 };
+    // Fetch live rates from our cached /api/rates endpoint (BCB + frankfurter.app)
+    let exchangeRates: Record<string, number> = { USD: 0.18, EUR: 0.165, ILS: 0.65, GBP: 0.14, AED: 0.66 };
+    let liveRates = { selic: 13.25, ipca: 4.8 };
+
     try {
-      const ratesRes = await fetch(
-        'https://api.exchangerate-api.com/v4/latest/BRL',
-        { next: { revalidate: 3600 } }
-      );
+      const baseUrl = req.headers.get('origin') || 'http://localhost:3001';
+      const ratesRes = await fetch(`${baseUrl}/api/rates`, { next: { revalidate: 3600 } });
       if (ratesRes.ok) {
         const ratesData = await ratesRes.json();
-        exchangeRates = {
-          USD: ratesData.rates?.USD ?? 0.18,
-          EUR: ratesData.rates?.EUR ?? 0.165,
-          ILS: ratesData.rates?.ILS ?? 0.66,
-          GBP: ratesData.rates?.GBP ?? 0.14,
-          AED: ratesData.rates?.AED ?? 0.66,
-        };
+        exchangeRates = ratesData.exchangeRates ?? exchangeRates;
+        liveRates = { selic: ratesData.selic ?? 13.25, ipca: ratesData.ipca ?? 4.8 };
       }
     } catch {
-      // Use fallback rates
+      // Use fallback rates silently
     }
 
-    const analysis = await runDealAnalysis(deal, exchangeRates);
+    const analysis = await runDealAnalysis(deal, exchangeRates, liveRates);
 
     return NextResponse.json({ analysis });
   } catch (error) {

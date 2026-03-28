@@ -197,7 +197,13 @@ export function MetricsOverview({ deal, analysis }: Props) {
 
       {/* Market context */}
       <div className="bg-white border border-slate-200 rounded-xl p-5">
-        <h3 className="font-semibold text-slate-700 mb-3">Market Context (Brazil 2025)</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-slate-700">Market Context</h3>
+          <span className="text-xs flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+            Live rates
+          </span>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <div className="text-slate-500">Selic Rate</div>
