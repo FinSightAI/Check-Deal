@@ -18,13 +18,18 @@ import { ComparableProperties } from '@/components/market/ComparableProperties';
 import { DueDiligenceChecklist } from '@/components/deal/DueDiligenceChecklist';
 import { NegotiationPanel } from '@/components/deal/NegotiationPanel';
 import { PFvsPJPanel } from '@/components/deal/PFvsPJPanel';
+import { MonteCarloSimulation } from '@/components/analysis/MonteCarloSimulation';
+import { GCAPCalculator } from '@/components/analysis/GCAPCalculator';
+import { PropertyMap } from '@/components/deal/PropertyMap';
+import { MarketDataPanel } from '@/components/market/MarketDataPanel';
+import { ShareDealModal } from '@/components/deal/ShareDealModal';
 import { getShareUrl } from '@/lib/utils/shareUtils';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { useDealStore } from '@/lib/store/dealStore';
 import {
   ArrowLeft, Plus, Building2, TrendingUp, Home, BarChart3,
   Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare, Share2, ClipboardList,
-  Handshake, Scale, StickyNote,
+  Handshake, Scale, StickyNote, Dice5, Calculator, TrendingDown, Users,
 } from 'lucide-react';
 
 const PIPELINE_STATUSES: { id: PipelineStatus; label: string; color: string; bg: string }[] = [
@@ -49,6 +54,7 @@ type Tab =
   | 'rental'
   | 'costs'
   | 'market'
+  | 'market-data'
   | 'sensitivity'
   | 'scenarios'
   | 'intl-tax'
@@ -57,7 +63,9 @@ type Tab =
   | 'risks'
   | 'checklist'
   | 'negotiate'
-  | 'pf-pj';
+  | 'pf-pj'
+  | 'monte-carlo'
+  | 'gcap';
 
 export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -65,6 +73,7 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [sharing, setSharing] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const { updateDeal, saveDeal } = useDealStore();
 
   const pipelineStatus = deal.pipelineStatus ?? 'exploring';
@@ -140,9 +149,12 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
     { id: 'cash-flow', label: 'Cash Flow', icon: BarChart3 },
     { id: 'sensitivity', label: 'Sensitivity', icon: Sliders },
     { id: 'scenarios', label: 'Scenarios', icon: GitBranch },
+    { id: 'monte-carlo', label: 'Monte Carlo', icon: Dice5 },
     { id: 'rental', label: 'Rental', icon: Home },
     { id: 'market', label: 'Comparables', icon: MapPin },
+    { id: 'market-data', label: 'Market Data', icon: TrendingDown },
     { id: 'costs', label: 'Costs & Tax', icon: Building2 },
+    { id: 'gcap', label: 'GCAP', icon: Calculator },
     ...(showIntlTax ? [{ id: 'intl-tax' as Tab, label: `${deal.buyerProfile.taxResidency} Tax`, icon: Globe }] : []),
     { id: 'ai', label: 'AI Insights', icon: Bot },
     { id: 'chat', label: 'Ask AI', icon: MessageSquare },
@@ -226,6 +238,17 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
             }
             <span className="hidden sm:block">{copied ? '✓ Copied!' : sharing ? 'Shortening…' : 'Share'}</span>
           </button>
+
+          {!readOnly && (
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center gap-1.5 text-sm border border-indigo-300 text-indigo-700 hover:bg-indigo-50 px-3 py-2 rounded-lg transition-colors"
+              title="Collaborate"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:block">Collab</span>
+            </button>
+          )}
 
           <button
             onClick={handleWhatsApp}
@@ -320,7 +343,17 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {activeTab === 'overview' && <MetricsOverview deal={deal} analysis={analysis} />}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <MetricsOverview deal={deal} analysis={analysis} />
+            <PropertyMap
+              address={deal.property.address}
+              city={deal.property.city}
+              neighborhood={deal.property.neighborhood}
+              state={deal.property.state}
+            />
+          </div>
+        )}
         {activeTab === 'cash-flow' && (
           <div className="space-y-6">
             <CashFlowChart cashFlows={analysis.cashFlows} currency="BRL" />
@@ -329,9 +362,12 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
         )}
         {activeTab === 'sensitivity' && <SensitivityAnalysis deal={deal} />}
         {activeTab === 'scenarios' && <ScenarioPlanning deal={deal} />}
+        {activeTab === 'monte-carlo' && <MonteCarloSimulation deal={deal} />}
         {activeTab === 'rental' && <RentalComparison deal={deal} analysis={analysis} />}
         {activeTab === 'market' && <ComparableProperties deal={deal} />}
+        {activeTab === 'market-data' && <MarketDataPanel deal={deal} />}
         {activeTab === 'costs' && <CostBreakdown deal={deal} analysis={analysis} />}
+        {activeTab === 'gcap' && <GCAPCalculator deal={deal} />}
         {activeTab === 'intl-tax' && <InternationalTaxPanel deal={deal} analysis={analysis} />}
         {activeTab === 'ai' && <AIInsightsPanel deal={deal} analysis={analysis} />}
         {activeTab === 'chat' && <AIChat deal={deal} analysis={analysis} />}
@@ -340,6 +376,11 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
         {activeTab === 'negotiate' && <NegotiationPanel deal={deal} />}
         {activeTab === 'pf-pj' && <PFvsPJPanel deal={deal} />}
       </div>
+
+      {/* Share / collab modal */}
+      {showShareModal && (
+        <ShareDealModal deal={deal} onClose={() => setShowShareModal(false)} />
+      )}
 
       {/* Notes panel */}
       {showNotes && !readOnly && (
