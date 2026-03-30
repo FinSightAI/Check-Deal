@@ -87,6 +87,7 @@ interface DealStore {
   setCurrentDeal: (deal: Deal | null) => void;
   saveDeal: () => void;
   deleteDeal: (id: string) => void;
+  duplicateDeal: (id: string) => Deal | null;
   setAnalysis: (analysis: DealAnalysis) => void;
   setAnalyzing: (v: boolean) => void;
   setAnalysisError: (error: string | null) => void;
@@ -152,6 +153,22 @@ export const useDealStore = create<DealStore>()(
           deals: state.deals.filter((d) => d.id !== id),
           currentDeal: state.currentDeal?.id === id ? null : state.currentDeal,
         }));
+      },
+
+      duplicateDeal: (id) => {
+        const { deals } = get();
+        const original = deals.find((d) => d.id === id);
+        if (!original) return null;
+        const copy: Deal = {
+          ...original,
+          id: crypto.randomUUID(),
+          name: `${original.name} (copy)`,
+          pipelineStatus: 'exploring',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        set((state) => ({ deals: [copy, ...state.deals], currentDeal: copy }));
+        return copy;
       },
 
       setAnalysis: (analysis) => {

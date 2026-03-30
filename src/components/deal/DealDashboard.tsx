@@ -23,13 +23,14 @@ import { GCAPCalculator } from '@/components/analysis/GCAPCalculator';
 import { PropertyMap } from '@/components/deal/PropertyMap';
 import { MarketDataPanel } from '@/components/market/MarketDataPanel';
 import { ShareDealModal } from '@/components/deal/ShareDealModal';
+import { QuickEditPanel } from '@/components/deal/QuickEditPanel';
 import { getShareUrl } from '@/lib/utils/shareUtils';
 import { AuthButton } from '@/components/auth/AuthButton';
 import { useDealStore } from '@/lib/store/dealStore';
 import {
   ArrowLeft, Plus, Building2, TrendingUp, Home, BarChart3,
   Bot, Shield, Globe, Sliders, GitBranch, MapPin, Download, MessageSquare, Share2, ClipboardList,
-  Handshake, Scale, StickyNote, Dice5, Calculator, TrendingDown, Users, MoreVertical, X,
+  Handshake, Scale, StickyNote, Dice5, Calculator, TrendingDown, Users, MoreVertical, X, Copy,
 } from 'lucide-react';
 
 const PIPELINE_STATUSES: { id: PipelineStatus; label: string; color: string; bg: string }[] = [
@@ -75,7 +76,8 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const { updateDeal, saveDeal } = useDealStore();
+  const [showQuickEdit, setShowQuickEdit] = useState(false);
+  const { updateDeal, saveDeal, duplicateDeal } = useDealStore();
 
   const pipelineStatus = deal.pipelineStatus ?? 'exploring';
   const statusInfo = PIPELINE_STATUSES.find(s => s.id === pipelineStatus) ?? PIPELINE_STATUSES[0];
@@ -224,6 +226,20 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
               </button>
             )}
 
+            {!readOnly && (
+              <button onClick={() => setShowQuickEdit(true)}
+                className="flex items-center gap-1.5 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-lg">
+                <Sliders className="w-4 h-4" /> Edit
+              </button>
+            )}
+
+            {!readOnly && (
+              <button onClick={() => { const copy = duplicateDeal(deal.id); if (copy) onNewDeal(); }}
+                className="flex items-center gap-1.5 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-lg">
+                <Copy className="w-4 h-4" /> Duplicate
+              </button>
+            )}
+
             <button onClick={handleShare} disabled={sharing}
               className="flex items-center gap-1.5 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-lg disabled:opacity-50">
               {sharing ? <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" /> : <Share2 className="w-4 h-4" />}
@@ -298,6 +314,18 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
             </div>
           )}
           <div className="grid grid-cols-2 gap-2">
+            {!readOnly && (
+              <button onClick={() => { setShowQuickEdit(true); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-blue-200 text-sm text-blue-700">
+                <Sliders className="w-4 h-4" /> Quick Edit
+              </button>
+            )}
+            {!readOnly && (
+              <button onClick={() => { duplicateDeal(deal.id); onNewDeal(); setShowMobileMenu(false); }}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700">
+                <Copy className="w-4 h-4" /> Duplicate
+              </button>
+            )}
             {!readOnly && (
               <button onClick={() => { setShowNotes(v => !v); setShowMobileMenu(false); }}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700">
@@ -428,6 +456,15 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
       {/* Share / collab modal */}
       {showShareModal && (
         <ShareDealModal deal={deal} onClose={() => setShowShareModal(false)} />
+      )}
+
+      {/* Quick edit panel */}
+      {showQuickEdit && !readOnly && (
+        <QuickEditPanel
+          deal={deal}
+          onClose={() => setShowQuickEdit(false)}
+          onReanalyzed={() => setActiveTab('overview')}
+        />
       )}
 
       {/* Notes panel */}
