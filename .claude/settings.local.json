@@ -9,7 +9,9 @@
       "Bash(npm run:*)",
       "Bash(curl -s http://localhost:3001)",
       "Bash(node -e \"console.log\\(require\\(''./node_modules/next/package.json''\\).version\\)\")",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node -e \"const { Dice5, Dices } = require\\(''lucide-react''\\); console.log\\(''Dice5:'', !!Dice5, ''Dices:'', !!Dices\\)\")",
+      "Bash(grep -r dice '/Users/s/Desktop/Check Deal/node_modules/lucide-react/dist/' --include=*.js -l)"
     ]
   }
 }

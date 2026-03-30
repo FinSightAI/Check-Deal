@@ -80,3 +80,12 @@
   transition-property: color, background-color, border-color, box-shadow;
   transition-duration: 150ms;
 }
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
