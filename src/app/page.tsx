@@ -9,7 +9,8 @@ import { PortfolioView } from '@/components/portfolio/PortfolioView';
 import { useDealStore } from '@/lib/store/dealStore';
 import { Deal } from '@/lib/types/deal';
 import { AuthButton } from '@/components/auth/AuthButton';
-import { Building2, Plus, List, TrendingUp, PieChart } from 'lucide-react';
+import { Building2, Plus, List, TrendingUp, PieChart, Sparkles } from 'lucide-react';
+import { buildSampleDeal } from '@/lib/utils/sampleDeal';
 
 type View = 'home' | 'new-deal' | 'dashboard' | 'saved-deals' | 'compare' | 'portfolio';
 
@@ -20,6 +21,14 @@ export default function HomePage() {
 
   const handleNewDeal = () => {
     createDeal();
+    setView('new-deal');
+  };
+
+  const handleSampleDeal = () => {
+    const sample = buildSampleDeal();
+    const store = useDealStore.getState();
+    const deal = store.createDeal();
+    store.updateDeal({ ...sample, id: deal.id });
     setView('new-deal');
   };
 
@@ -156,12 +165,20 @@ export default function HomePage() {
             <Plus className="w-5 h-5" />
             Analyze a New Deal
           </button>
-          {deals.length > 0 && (
+          {deals.length > 0 ? (
             <button
               onClick={() => setView('saved-deals')}
               className="text-slate-400 hover:text-white text-sm transition-colors"
             >
               Or view your {deals.length} saved deal{deals.length > 1 ? 's' : ''}
+            </button>
+          ) : (
+            <button
+              onClick={handleSampleDeal}
+              className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 text-sm transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Try with a sample deal (Pinheiros, SP)
             </button>
           )}
         </div>

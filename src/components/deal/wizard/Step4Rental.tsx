@@ -68,6 +68,16 @@ export function Step4Rental({ onNext, onBack }: Props) {
   const grossYieldSTR = estimatedAnnualSTR > 0
     ? (estimatedAnnualSTR / price) * 100 : 0;
 
+  // Rental validation warnings
+  const rentWarn: string | null =
+    (rental.strategy === 'long-term' || rental.strategy === 'hybrid') && rental.ltr.monthlyRent === 0
+      ? '⚠ Monthly rent is 0 — the yield calculation will show 0%. Enter an estimated rent.'
+      : grossYieldLTR > 20
+      ? '⚠ Gross yield above 20% is unusually high — double-check the rent vs price.'
+      : grossYieldLTR > 0 && grossYieldLTR < 2
+      ? '⚠ Gross yield below 2% is very low — verify rent amount.'
+      : null;
+
   return (
     <div className="space-y-8">
       <div>
@@ -122,6 +132,9 @@ export function Step4Rental({ onNext, onBack }: Props) {
       {/* Long-term rental */}
       {(rental.strategy === 'long-term' || rental.strategy === 'hybrid') && (
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+          {rentWarn && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">{rentWarn}</p>
+          )}
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-slate-700">Long-Term Rental Details</h3>
             {grossYieldLTR > 0 && (

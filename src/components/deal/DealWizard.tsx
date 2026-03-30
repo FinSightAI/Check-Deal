@@ -8,7 +8,7 @@ import { Step3Financing } from './wizard/Step3Financing';
 import { Step4Rental } from './wizard/Step4Rental';
 import { Step5Review } from './wizard/Step5Review';
 import { ImportFromListing } from './ImportFromListing';
-import { ArrowLeft, Building2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Building2, Sparkles, Info } from 'lucide-react';
 
 interface Props {
   onComplete: () => void;
@@ -80,6 +80,16 @@ export function DealWizard({ onComplete, onBack }: Props) {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-8">
+        {/* Sample deal banner */}
+        {useDealStore.getState().currentDeal?.name?.includes('Sample Deal') && (
+          <div className="mb-6 flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold">Sample deal loaded</span> — this is a pre-filled example (Pinheiros, São Paulo).
+              Edit any field, then click <strong>Analyze</strong> on the last step to see your results.
+            </div>
+          </div>
+        )}
         {/* Import button — shown on step 2 (property) */}
         {step === 2 && !showImport && (
           <div className="mb-6">

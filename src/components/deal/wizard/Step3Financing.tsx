@@ -44,6 +44,34 @@ export function Step3Financing({ onNext, onBack }: Props) {
 
   const canProceed = financing.financingType === 'cash' || financing.downPaymentAmount > 0;
 
+  // Validation warnings
+  const warnings: { field: string; msg: string; level: 'error' | 'warn' }[] = [];
+  if (financing.financingType !== 'cash') {
+    if (financing.downPaymentPercent < 20)
+      warnings.push({ field: 'downPayment', msg: 'Caixa requires minimum 20% down for resale properties. Some private banks require 30%.', level: 'warn' });
+    if (financing.downPaymentAmount >= price && price > 0)
+      warnings.push({ field: 'downPayment', msg: 'Down payment equals or exceeds the purchase price — consider Cash instead.', level: 'error' });
+    if (financing.interestRate > 15)
+      warnings.push({ field: 'interestRate', msg: 'Interest rate above 15%/year is very high. Current Caixa rates: 10–11.5% + TR.', level: 'warn' });
+    if (financing.interestRate < 5 && financing.interestRate > 0)
+      warnings.push({ field: 'interestRate', msg: 'Interest rate below 5%/year is unusually low for Brazil.', level: 'warn' });
+    if (monthlyPayment > 0 && price > 0) {
+      const paymentToPrice = (monthlyPayment / price) * 100;
+      if (paymentToPrice > 2)
+        warnings.push({ field: 'payment', msg: 'Monthly payment is over 2% of property value — verify loan terms.', level: 'warn' });
+    }
+  }
+
+  const warn = (field: string) => {
+    const w = warnings.find(w => w.field === field);
+    if (!w) return null;
+    return (
+      <p className={`text-xs mt-1.5 ${w.level === 'error' ? 'text-red-600' : 'text-amber-600'}`}>
+        {w.level === 'error' ? '✕' : '⚠'} {w.msg}
+      </p>
+    );
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -124,6 +152,7 @@ export function Step3Financing({ onNext, onBack }: Props) {
                 Higher LTV may not be available.
               </p>
             )}
+            {warn('downPayment')}
 
             {/* FGTS */}
             <div className="border-t border-slate-100 pt-4">
@@ -196,6 +225,7 @@ export function Step3Financing({ onNext, onBack }: Props) {
                 <p className="text-xs text-slate-500 mt-1">
                   Caixa typical: 10-11.5% + TR. Selic: {BRAZIL_SELIC_RATE}%
                 </p>
+                {warn('interestRate')}
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-600 block mb-1.5">Term (years)</label>
@@ -260,6 +290,7 @@ export function Step3Financing({ onNext, onBack }: Props) {
                       First payment (SAC decreases over time)
                     </div>
                   )}
+                  {warn('payment')}
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-blue-700">Loan Amount</div>

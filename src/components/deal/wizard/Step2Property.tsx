@@ -28,6 +28,35 @@ export function Step2Property({ onNext, onBack }: Props) {
     property.sizeSqm > 0 &&
     property.city.length > 0;
 
+  // Validation warnings (non-blocking)
+  const warnings: { field: string; msg: string; level: 'error' | 'warn' }[] = [];
+  if (property.askingPrice > 0 && property.askingPrice < 50_000)
+    warnings.push({ field: 'askingPrice', msg: 'Price seems very low for Brazilian real estate.', level: 'warn' });
+  if (property.askingPrice > 15_000_000)
+    warnings.push({ field: 'askingPrice', msg: 'Price above R$15M — double-check the value.', level: 'warn' });
+  if (property.sizeSqm > 0 && property.sizeSqm < 15)
+    warnings.push({ field: 'sizeSqm', msg: 'Size below 15m² is unusual — verify.', level: 'warn' });
+  if (property.sizeSqm > 2000)
+    warnings.push({ field: 'sizeSqm', msg: 'Size above 2,000m² — is this correct?', level: 'warn' });
+  if (pricePerSqm > 0 && pricePerSqm < 1000)
+    warnings.push({ field: 'pricePerSqm', msg: 'Price per m² below R$1,000 is unusually low for Brazil.', level: 'warn' });
+  if (pricePerSqm > 60_000)
+    warnings.push({ field: 'pricePerSqm', msg: 'Price per m² above R$60K — verify (e.g. Leblon/Ipanema can reach R$25-35K).', level: 'warn' });
+  if (property.agreedPrice && property.agreedPrice > property.askingPrice * 1.05)
+    warnings.push({ field: 'agreedPrice', msg: 'Agreed price is higher than asking price — unusual.', level: 'warn' });
+  if (property.yearBuilt && (property.yearBuilt < 1850 || property.yearBuilt > new Date().getFullYear() + 5))
+    warnings.push({ field: 'yearBuilt', msg: `Year built must be between 1850 and ${new Date().getFullYear() + 5}.`, level: 'error' });
+
+  const warn = (field: string) => {
+    const w = warnings.find(w => w.field === field);
+    if (!w) return null;
+    return (
+      <p className={`text-xs mt-1 ${w.level === 'error' ? 'text-red-600' : 'text-amber-600'}`}>
+        {w.level === 'error' ? '✕' : '⚠'} {w.msg}
+      </p>
+    );
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -144,8 +173,9 @@ export function Step2Property({ onNext, onBack }: Props) {
               placeholder="85"
               value={property.sizeSqm || ''}
               onChange={(e) => update({ sizeSqm: parseFloat(e.target.value) || 0 })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full border rounded-lg px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 ${warnings.find(w => w.field === 'sizeSqm') ? 'border-amber-400' : 'border-slate-300'}`}
             />
+            {warn('sizeSqm')}
           </div>
           <div>
             <label className="text-sm font-medium text-slate-600 block mb-1.5">Rooms</label>
@@ -193,8 +223,9 @@ export function Step2Property({ onNext, onBack }: Props) {
               placeholder="2010"
               value={property.yearBuilt || ''}
               onChange={(e) => update({ yearBuilt: parseInt(e.target.value) || undefined })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full border rounded-lg px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 ${warnings.find(w => w.field === 'yearBuilt') ? 'border-red-400' : 'border-slate-300'}`}
             />
+            {warn('yearBuilt')}
           </div>
         </div>
 
@@ -240,8 +271,9 @@ export function Step2Property({ onNext, onBack }: Props) {
               placeholder="750000"
               value={property.askingPrice || ''}
               onChange={(e) => update({ askingPrice: parseFloat(e.target.value) || 0 })}
-              className="w-full border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full border rounded-lg pl-10 pr-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 ${warnings.find(w => w.field === 'askingPrice') ? 'border-amber-400' : 'border-slate-300'}`}
             />
+            {warn('askingPrice')}
           </div>
         </div>
 
@@ -256,17 +288,19 @@ export function Step2Property({ onNext, onBack }: Props) {
               placeholder="Same as asking price"
               value={property.agreedPrice || ''}
               onChange={(e) => update({ agreedPrice: parseFloat(e.target.value) || undefined })}
-              className="w-full border border-slate-300 rounded-lg pl-10 pr-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full border rounded-lg pl-10 pr-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 ${warnings.find(w => w.field === 'agreedPrice') ? 'border-amber-400' : 'border-slate-300'}`}
             />
+            {warn('agreedPrice')}
           </div>
         </div>
 
         {pricePerSqm > 0 && (
-          <div className="bg-slate-50 rounded-lg px-4 py-3">
+          <div className={`rounded-lg px-4 py-3 ${warnings.find(w => w.field === 'pricePerSqm') ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'}`}>
             <span className="text-sm text-slate-600">Price per sqm: </span>
             <span className="font-semibold text-slate-800">
               R${pricePerSqm.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}/m²
             </span>
+            {warn('pricePerSqm')}
           </div>
         )}
       </div>
