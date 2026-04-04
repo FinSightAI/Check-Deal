@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Deal, DealAnalysis, AIInsights } from '@/lib/types/deal';
 import { getRatingColor, getRatingBg } from '@/lib/utils/formatters';
 import { Bot, Loader2, RefreshCw, CheckCircle, AlertTriangle, Lightbulb, TrendingUp } from 'lucide-react';
+import { useDealStore } from '@/lib/store/dealStore';
 
 interface Props {
   deal: Deal;
@@ -14,6 +15,7 @@ export function AIInsightsPanel({ deal, analysis }: Props) {
   const [insights, setInsights] = useState<AIInsights | null>(deal.aiInsights ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { updateDeal, saveDeal } = useDealStore();
 
   const fetchInsights = async () => {
     setLoading(true);
@@ -32,6 +34,9 @@ export function AIInsightsPanel({ deal, analysis }: Props) {
 
       const data = await res.json();
       setInsights(data.insights);
+      // Cache in store so it survives tab switches and page reloads
+      updateDeal({ aiInsights: data.insights });
+      saveDeal();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to get AI insights');
     } finally {
@@ -83,20 +88,25 @@ export function AIInsightsPanel({ deal, analysis }: Props) {
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Bot className="w-5 h-5 text-blue-500" />
           <span className="font-semibold text-slate-700">Claude AI Analysis</span>
           <span className="text-xs text-slate-400">
             {new Date(insights.generatedAt).toLocaleDateString()}
           </span>
+          {analysis.runAt && new Date(insights.generatedAt) < new Date(analysis.runAt) && (
+            <span className="text-[11px] bg-amber-50 border border-amber-200 text-amber-700 px-2 py-0.5 rounded-full">
+              ⚠ Generated before last re-analysis — consider refreshing
+            </span>
+          )}
         </div>
         <button
           onClick={fetchInsights}
           disabled={loading}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
         >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Regenerate
         </button>
       </div>
 

@@ -20,6 +20,7 @@ import { NegotiationPanel } from '@/components/deal/NegotiationPanel';
 import { PFvsPJPanel } from '@/components/deal/PFvsPJPanel';
 import { MonteCarloSimulation } from '@/components/analysis/MonteCarloSimulation';
 import { GCAPCalculator } from '@/components/analysis/GCAPCalculator';
+import { FinancingComparison } from '@/components/analysis/FinancingComparison';
 import { PropertyMap } from '@/components/deal/PropertyMap';
 import { MarketDataPanel } from '@/components/market/MarketDataPanel';
 import { ShareDealModal } from '@/components/deal/ShareDealModal';
@@ -66,7 +67,8 @@ type Tab =
   | 'negotiate'
   | 'pf-pj'
   | 'monte-carlo'
-  | 'gcap';
+  | 'gcap'
+  | 'financing';
 
 export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -158,6 +160,7 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
     { id: 'market-data', label: 'Market Data', icon: TrendingDown },
     { id: 'costs', label: 'Costs & Tax', icon: Building2 },
     { id: 'gcap', label: 'GCAP', icon: Calculator },
+    { id: 'financing', label: 'Financing', icon: GitBranch },
     ...(showIntlTax ? [{ id: 'intl-tax' as Tab, label: `${deal.buyerProfile.taxResidency} Tax`, icon: Globe }] : []),
     { id: 'ai', label: 'AI Insights', icon: Bot },
     { id: 'chat', label: 'Ask AI', icon: MessageSquare },
@@ -444,6 +447,7 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
         {activeTab === 'market-data' && <MarketDataPanel deal={deal} />}
         {activeTab === 'costs' && <CostBreakdown deal={deal} analysis={analysis} />}
         {activeTab === 'gcap' && <GCAPCalculator deal={deal} />}
+        {activeTab === 'financing' && <FinancingComparison deal={deal} />}
         {activeTab === 'intl-tax' && <InternationalTaxPanel deal={deal} analysis={analysis} />}
         {activeTab === 'ai' && <AIInsightsPanel deal={deal} analysis={analysis} />}
         {activeTab === 'chat' && <AIChat deal={deal} analysis={analysis} />}

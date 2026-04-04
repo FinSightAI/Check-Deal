@@ -9,14 +9,16 @@ import { PortfolioView } from '@/components/portfolio/PortfolioView';
 import { useDealStore } from '@/lib/store/dealStore';
 import { Deal } from '@/lib/types/deal';
 import { AuthButton } from '@/components/auth/AuthButton';
-import { Building2, Plus, List, TrendingUp, PieChart, Sparkles } from 'lucide-react';
+import { Building2, Plus, List, TrendingUp, PieChart, Sparkles, LayoutTemplate } from 'lucide-react';
 import { buildSampleDeal } from '@/lib/utils/sampleDeal';
+import { DealTemplates } from '@/components/deal/DealTemplates';
 
 type View = 'home' | 'new-deal' | 'dashboard' | 'saved-deals' | 'compare' | 'portfolio';
 
 export default function HomePage() {
   const [view, setView] = useState<View>('home');
   const [compareDeals, setCompareDeals] = useState<Deal[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
   const { currentDeal, deals, createDeal } = useDealStore();
 
   const handleNewDeal = () => {
@@ -165,22 +167,31 @@ export default function HomePage() {
             <Plus className="w-5 h-5" />
             Analyze a New Deal
           </button>
-          {deals.length > 0 ? (
+          <div className="flex items-center gap-3 flex-wrap justify-center">
             <button
-              onClick={() => setView('saved-deals')}
-              className="text-slate-400 hover:text-white text-sm transition-colors"
+              onClick={() => setShowTemplates(true)}
+              className="flex items-center gap-1.5 text-slate-300 hover:text-white text-sm border border-white/20 hover:border-white/40 px-4 py-2 rounded-lg transition-colors"
             >
-              Or view your {deals.length} saved deal{deals.length > 1 ? 's' : ''}
+              <LayoutTemplate className="w-3.5 h-3.5" />
+              Start from template
             </button>
-          ) : (
-            <button
-              onClick={handleSampleDeal}
-              className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 text-sm transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              Try with a sample deal (Pinheiros, SP)
-            </button>
-          )}
+            {deals.length > 0 ? (
+              <button
+                onClick={() => setView('saved-deals')}
+                className="text-slate-400 hover:text-white text-sm transition-colors"
+              >
+                View {deals.length} saved deal{deals.length > 1 ? 's' : ''}
+              </button>
+            ) : (
+              <button
+                onClick={handleSampleDeal}
+                className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 text-sm transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Try sample deal (Pinheiros, SP)
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Features grid */}
@@ -206,6 +217,16 @@ export default function HomePage() {
           </p>
         </div>
       </main>
+
+      {showTemplates && (
+        <DealTemplates
+          onClose={() => setShowTemplates(false)}
+          onSelect={() => {
+            setShowTemplates(false);
+            setView('new-deal');
+          }}
+        />
+      )}
     </div>
   );
 }

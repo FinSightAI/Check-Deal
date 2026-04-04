@@ -60,15 +60,39 @@ function ScoreDot({ value, max = 10 }: { value: number; max?: number }) {
   );
 }
 
-export function MarketDataPanel({ deal }: Props) {
-  const [data, setData] = useState<MarketData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+function getCacheKey(city: string, neighborhood: string, sizeSqm: number, propertyType: string) {
+  return `marketData:${city}:${neighborhood}:${sizeSqm}:${propertyType}`.toLowerCase().replace(/\s+/g, '-');
+}
+
+function readCache(key: string): MarketData | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL_MS) { localStorage.removeItem(key); return null; }
+    return data as MarketData;
+  } catch { return null; }
+}
+
+function writeCache(key: string, data: MarketData) {
+  try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* ignore */ }
+}
+
+export function MarketDataPanel({ deal }: Props) {
   const { property, analysis } = deal;
   const price = property.agreedPrice || property.askingPrice;
 
-  const fetch = async () => {
+  const cacheKey = getCacheKey(property.city, property.neighborhood, property.sizeSqm, property.propertyType);
+  const [data, setData] = useState<MarketData | null>(() => readCache(cacheKey));
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [cachedAt, setCachedAt] = useState<number | null>(() => {
+    try { const raw = localStorage.getItem(cacheKey); return raw ? JSON.parse(raw).ts : null; } catch { return null; }
+  });
+
+  const doFetch = async () => {
     setLoading(true);
     setError('');
     try {
@@ -88,6 +112,8 @@ export function MarketDataPanel({ deal }: Props) {
       const json = await res.json();
       if (json.error) throw new Error(json.error);
       setData(json.marketData);
+      writeCache(cacheKey, json.marketData);
+      setCachedAt(Date.now());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to fetch market data');
     } finally {
@@ -107,7 +133,7 @@ export function MarketDataPanel({ deal }: Props) {
           </p>
           <p className="text-xs text-slate-400 mb-5">Powered by Gemini AI · Uses current Brazilian real estate market knowledge</p>
           <button
-            onClick={fetch}
+            onClick={doFetch}
             className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
           >
             Analyze Market
@@ -136,7 +162,7 @@ export function MarketDataPanel({ deal }: Props) {
         <div>
           <p className="font-medium text-red-800">Failed to load market data</p>
           <p className="text-sm text-red-600 mt-1">{error}</p>
-          <button onClick={fetch} className="text-sm text-red-700 underline mt-2">Try again</button>
+          <button onClick={doFetch} className="text-sm text-red-700 underline mt-2">Try again</button>
         </div>
       </div>
     );
@@ -300,12 +326,19 @@ export function MarketDataPanel({ deal }: Props) {
         </span>
       </div>
 
-      <button
-        onClick={fetch}
-        className="text-sm text-teal-600 hover:text-teal-800 underline"
-      >
-        Refresh analysis
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={doFetch}
+          className="text-sm text-teal-600 hover:text-teal-800 underline"
+        >
+          Refresh analysis
+        </button>
+        {cachedAt && (
+          <span className="text-xs text-slate-400">
+            Cached · {new Date(cachedAt).toLocaleDateString()}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

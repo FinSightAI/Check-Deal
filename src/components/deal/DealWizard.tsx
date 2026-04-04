@@ -8,7 +8,8 @@ import { Step3Financing } from './wizard/Step3Financing';
 import { Step4Rental } from './wizard/Step4Rental';
 import { Step5Review } from './wizard/Step5Review';
 import { ImportFromListing } from './ImportFromListing';
-import { ArrowLeft, Building2, Sparkles, Info } from 'lucide-react';
+import { ArrowLeft, Building2, Sparkles, Info, LayoutTemplate } from 'lucide-react';
+import { DealTemplates } from './DealTemplates';
 
 interface Props {
   onComplete: () => void;
@@ -18,6 +19,7 @@ interface Props {
 export function DealWizard({ onComplete, onBack }: Props) {
   const [step, setStep] = useState(1);
   const [showImport, setShowImport] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const totalSteps = 5;
 
   const STEPS = [
@@ -90,15 +92,22 @@ export function DealWizard({ onComplete, onBack }: Props) {
             </div>
           </div>
         )}
-        {/* Import button — shown on step 2 (property) */}
+        {/* Import / template buttons — shown on step 2 (property) */}
         {step === 2 && !showImport && (
-          <div className="mb-6">
+          <div className="mb-6 flex flex-wrap gap-2">
             <button
               onClick={() => setShowImport(true)}
               className="flex items-center gap-2 text-sm bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-4 py-2.5 rounded-xl transition-all shadow-sm"
             >
               <Sparkles className="w-4 h-4" />
               Import from listing (ZAP / OLX / VivaReal)
+            </button>
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="flex items-center gap-2 text-sm border border-slate-300 text-slate-600 hover:bg-slate-50 px-4 py-2.5 rounded-xl transition-all"
+            >
+              <LayoutTemplate className="w-4 h-4" />
+              Use a template
             </button>
           </div>
         )}
@@ -113,6 +122,13 @@ export function DealWizard({ onComplete, onBack }: Props) {
               ← Fill manually instead
             </button>
           </div>
+        )}
+
+        {showTemplates && (
+          <DealTemplates
+            onClose={() => setShowTemplates(false)}
+            onSelect={() => setShowTemplates(false)}
+          />
         )}
 
         {step === 1 && <Step1BuyerProfile onNext={() => setStep(2)} />}
