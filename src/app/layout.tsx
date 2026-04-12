@@ -32,12 +32,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className={inter.className}>
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-MPRTN6CJ9K" strategy="afterInteractive" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-6E5BE86WVT" strategy="afterInteractive" />
         <Script id="ga-init" strategy="afterInteractive">{`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-MPRTN6CJ9K');
+          gtag('config', 'G-6E5BE86WVT');
         `}</Script>
         {children}
         <ThemeToggle />
