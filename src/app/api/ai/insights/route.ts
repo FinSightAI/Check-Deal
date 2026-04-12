@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Deal, DealAnalysis } from '@/lib/types/deal';
+import { rateLimit, getIP, rateLimitResponse } from '@/lib/rateLimit';
+
+const INSIGHTS_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 }; // 10/hr per IP
 
 const SYSTEM_PROMPT = `You are a senior real estate investment analyst specializing in the Brazilian market with 20+ years of experience. You are deeply familiar with:
 - Brazilian real estate law, taxes (ITBI, IPTU, IRPF/carnê-leão, GCAP), and the Receita Federal
@@ -20,6 +23,8 @@ You provide rigorous, data-driven analysis that is:
 Always respond in English as the app is in English. Be concise but comprehensive. Format your response as valid JSON only — no markdown, no code fences.`;
 
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(getIP(req), INSIGHTS_LIMIT);
+  if (!rl.allowed) return rateLimitResponse(rl.resetAt);
   try {
     const { deal, analysis }: { deal: Deal; analysis: DealAnalysis } = await req.json();
 

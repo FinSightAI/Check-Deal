@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { rateLimit, getIP, rateLimitResponse } from '@/lib/rateLimit';
+
+const MARKET_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 }; // 10/hr per IP
 
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(getIP(req), MARKET_LIMIT);
+  if (!rl.allowed) return rateLimitResponse(rl.resetAt);
   const { city, neighborhood, state, sizeSqm, rooms, propertyType, askingPrice } = await req.json();
 
   if (!process.env.GOOGLE_AI_API_KEY) {
