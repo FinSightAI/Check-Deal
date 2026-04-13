@@ -13,6 +13,9 @@ export function NegotiationPanel({ deal }: Props) {
   if (!analysis) return null;
 
   const originalPrice = property.agreedPrice || property.askingPrice;
+  const currency = property.currency ?? 'BRL';
+  const isIsrael = property.country === 'IL';
+  const isUSA = property.country === 'US';
   const [discountPct, setDiscountPct] = useState(0);
 
   const negotiatedPrice = originalPrice * (1 - discountPct / 100);
@@ -42,9 +45,9 @@ export function NegotiationPanel({ deal }: Props) {
   };
 
   const metrics = [
-    { label: 'Negotiated Price', orig: formatCurrency(originalPrice, 'BRL', true), newVal: formatCurrency(negotiatedPrice, 'BRL', true), d: delta(negotiatedPrice, originalPrice, false) },
-    { label: 'Total Cash Required', orig: formatCurrency(totalCashOrig, 'BRL', true), newVal: formatCurrency(newTotalCash, 'BRL', true), d: delta(newTotalCash, totalCashOrig, false) },
-    { label: 'Price / m²', orig: formatCurrency(analysis.returns.pricePerSqm, 'BRL') + '/m²', newVal: formatCurrency(newPricePerSqm, 'BRL') + '/m²', d: delta(newPricePerSqm, analysis.returns.pricePerSqm, false) },
+    { label: 'Negotiated Price', orig: formatCurrency(originalPrice, currency, true), newVal: formatCurrency(negotiatedPrice, currency, true), d: delta(negotiatedPrice, originalPrice, false) },
+    { label: 'Total Cash Required', orig: formatCurrency(totalCashOrig, currency, true), newVal: formatCurrency(newTotalCash, currency, true), d: delta(newTotalCash, totalCashOrig, false) },
+    { label: 'Price / m²', orig: formatCurrency(analysis.returns.pricePerSqm, currency) + '/m²', newVal: formatCurrency(newPricePerSqm, currency) + '/m²', d: delta(newPricePerSqm, analysis.returns.pricePerSqm, false) },
     { label: 'Gross Yield', orig: formatPercent(analysis.returns.grossYield), newVal: formatPercent(newGrossYield), d: delta(newGrossYield, analysis.returns.grossYield, true) },
     { label: 'Net Yield', orig: formatPercent(analysis.returns.netYield), newVal: formatPercent(newNetYield), d: delta(newNetYield, analysis.returns.netYield, true) },
     { label: 'Cap Rate', orig: formatPercent(analysis.returns.capRate), newVal: formatPercent(newCapRate), d: delta(newCapRate, analysis.returns.capRate, true) },
@@ -82,7 +85,7 @@ export function NegotiationPanel({ deal }: Props) {
         {discountPct > 0 && (
           <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 flex items-center justify-between">
             <span className="text-sm text-emerald-700">You save</span>
-            <span className="text-xl font-bold text-emerald-700">{formatCurrency(saving, 'BRL', true)}</span>
+            <span className="text-xl font-bold text-emerald-700">{formatCurrency(saving, currency, true)}</span>
           </div>
         )}
       </div>
@@ -113,15 +116,38 @@ export function NegotiationPanel({ deal }: Props) {
         ))}
       </div>
 
-      {/* Negotiation tips */}
+      {/* Negotiation tips — market-aware */}
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-        <h4 className="font-semibold text-blue-800 mb-3">🤝 Negotiation Tips for Brazil</h4>
+        <h4 className="font-semibold text-blue-800 mb-3">
+          🤝 Negotiation Tips {isUSA ? 'for the US' : isIsrael ? 'for Israel' : 'for Brazil'}
+        </h4>
         <ul className="space-y-2 text-sm text-blue-700">
-          <li>• <strong>5-10% discount</strong> is typical in most markets. More than 15% requires strong justification (condition issues, overpriced listing, seller urgency).</li>
-          <li>• <strong>Time on market:</strong> Properties listed 90+ days have more room. Ask the broker how long it has been listed.</li>
-          <li>• <strong>Cash premium:</strong> Offering full cash (no financing) can justify 3-5% additional discount — seller avoids bank delays.</li>
-          <li>• <strong>Signed ITBI clause:</strong> Propose a price split on the escritura (common practice) only if legally advised.</li>
-          <li>• <strong>Offer timing:</strong> December–January and June–July tend to be slower months — seller motivation is higher.</li>
+          {isUSA ? (
+            <>
+              <li>• <strong>Earnest money deposit:</strong> Typically 1–3% of purchase price in escrow. Shows commitment and affects negotiating power.</li>
+              <li>• <strong>Inspection contingency:</strong> Never waive — use inspection findings to negotiate repairs or price reductions.</li>
+              <li>• <strong>Days on market:</strong> Properties listed 60+ days have more room. Zillow/Redfin show exact listing dates.</li>
+              <li>• <strong>Cash offer premium:</strong> Cash buyers often get 3–5% discount for speed and certainty (no appraisal or financing contingency).</li>
+              <li>• <strong>Closing cost credits:</strong> Instead of price reduction, negotiate seller credits toward closing costs — sometimes more tax-efficient.</li>
+              <li>• <strong>Seasonal timing:</strong> November–February tend to be slower — seller motivation is higher in off-season.</li>
+            </>
+          ) : isIsrael ? (
+            <>
+              <li>• <strong>5-10% discount</strong> is typical. Above 10% requires strong justification — Israeli sellers are rarely distressed.</li>
+              <li>• <strong>Time on market:</strong> Properties listed 120+ days (yad2) have more room. Israeli listings move fast in hot areas.</li>
+              <li>• <strong>Cash premium:</strong> Paying cash with fast closing (without mortgage) can justify 3–5% additional discount.</li>
+              <li>• <strong>Mas Rechisha:</strong> Some sellers split the declared price on multiple contract lines — get legal advice before agreeing.</li>
+              <li>• <strong>Timing:</strong> Post-holidays (after Sukkot, after Pesach) tends to have more motivated sellers.</li>
+            </>
+          ) : (
+            <>
+              <li>• <strong>5-10% discount</strong> is typical in most markets. More than 15% requires strong justification (condition issues, overpriced listing, seller urgency).</li>
+              <li>• <strong>Time on market:</strong> Properties listed 90+ days have more room. Ask the broker how long it has been listed.</li>
+              <li>• <strong>Cash premium:</strong> Offering full cash (no financing) can justify 3-5% additional discount — seller avoids bank delays.</li>
+              <li>• <strong>Signed ITBI clause:</strong> Propose a price split on the escritura (common practice) only if legally advised.</li>
+              <li>• <strong>Offer timing:</strong> December–January and June–July tend to be slower months — seller motivation is higher.</li>
+            </>
+          )}
         </ul>
       </div>
     </div>

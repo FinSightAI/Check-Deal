@@ -29,6 +29,8 @@ interface Props {
   sizeSqm: number;
   rooms: number;
   propertyType: string;
+  country?: string;
+  currency?: string;
   userLtrRent?: number;
   userNightlyRate?: number;
   onApplyLtr?: (rent: number) => void;
@@ -44,7 +46,7 @@ const DEMAND_COLOR: Record<string, string> = {
   high: 'text-emerald-600', medium: 'text-blue-600', low: 'text-red-500',
 };
 
-export function RentalMarketInsight({ city, neighborhood, state, sizeSqm, rooms, propertyType, userLtrRent, userNightlyRate, onApplyLtr, onApplyStr }: Props) {
+export function RentalMarketInsight({ city, neighborhood, state, sizeSqm, rooms, propertyType, country, currency, userLtrRent, userNightlyRate, onApplyLtr, onApplyStr }: Props) {
   const [estimate, setEstimate] = useState<RentalEstimate | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -56,7 +58,7 @@ export function RentalMarketInsight({ city, neighborhood, state, sizeSqm, rooms,
       const res = await fetch('/api/ai/rental-estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ city, neighborhood, state, sizeSqm, rooms, propertyType }),
+        body: JSON.stringify({ city, neighborhood, state, sizeSqm, rooms, propertyType, country }),
       });
       const data = await res.json();
       if (data.estimate) setEstimate(data.estimate);

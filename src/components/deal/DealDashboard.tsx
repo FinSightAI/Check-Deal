@@ -171,6 +171,7 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   ];
 
   const price = deal.property.agreedPrice || deal.property.askingPrice;
+  const dealCurrency = deal.property.currency ?? 'BRL';
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -364,9 +365,9 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
             {' · '}{deal.property.sizeSqm}m²
           </span>
           <span className="text-slate-500">
-            {formatCurrency(price, 'BRL', true)}
+            {formatCurrency(price, dealCurrency, true)}
             {' '}
-            <span className="text-xs text-slate-400">({formatCurrency(analysis.returns.pricePerSqm, 'BRL')}/m²)</span>
+            <span className="text-xs text-slate-400">({formatCurrency(analysis.returns.pricePerSqm, dealCurrency)}/m²)</span>
           </span>
           <span className={`font-medium ${marketContext.priceVsMarketPercent > 5 ? 'text-orange-600' : marketContext.priceVsMarketPercent < -5 ? 'text-emerald-600' : 'text-slate-500'}`}>
             {marketContext.priceVsMarketPercent > 0 ? '+' : ''}{marketContext.priceVsMarketPercent.toFixed(1)}% vs market

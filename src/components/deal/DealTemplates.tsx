@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { DEAL_TEMPLATES, DealTemplate } from '@/lib/utils/dealTemplates';
 import { useDealStore } from '@/lib/store/dealStore';
 import { X } from 'lucide-react';
@@ -9,14 +10,36 @@ interface Props {
   onSelect: () => void; // called after template applied, navigate to wizard
 }
 
+type MarketFilter = 'all' | 'BR' | 'IL' | 'US';
+
+const MARKET_FILTERS: { id: MarketFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'BR', label: '🇧🇷 Brazil' },
+  { id: 'IL', label: '🇮🇱 Israel' },
+  { id: 'US', label: '🇺🇸 USA' },
+];
+
 export function DealTemplates({ onClose, onSelect }: Props) {
   const { createDeal, updateDeal } = useDealStore();
+  const [filter, setFilter] = useState<MarketFilter>('all');
 
   const handleSelect = (template: DealTemplate) => {
     const deal = createDeal();
     updateDeal({ ...template.overrides, id: deal.id });
+    // Also reset financing defaults for the market
+    const country = (template.overrides.property as { country?: string })?.country;
+    if (country === 'IL' || country === 'US') {
+      useDealStore.getState().updateMarket(country as 'IL' | 'US');
+    }
     onSelect();
   };
+
+  const filtered = filter === 'all'
+    ? DEAL_TEMPLATES
+    : DEAL_TEMPLATES.filter(t => {
+        const country = (t.overrides.property as { country?: string })?.country;
+        return country === filter;
+      });
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
@@ -25,7 +48,7 @@ export function DealTemplates({ onClose, onSelect }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-800">Start from a Template</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Pre-filled for common Brazilian RE scenarios</p>
+            <p className="text-sm text-slate-500 mt-0.5">Pre-filled scenarios for Brazil 🇧🇷, Israel 🇮🇱, and the US 🇺🇸</p>
           </div>
           <button
             onClick={onClose}
@@ -35,9 +58,26 @@ export function DealTemplates({ onClose, onSelect }: Props) {
           </button>
         </div>
 
+        {/* Market filter tabs */}
+        <div className="flex gap-2 px-4 pt-3 pb-1 flex-shrink-0">
+          {MARKET_FILTERS.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                filter === f.id
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
         {/* Templates */}
         <div className="overflow-y-auto p-4 space-y-3">
-          {DEAL_TEMPLATES.map((template) => (
+          {filtered.map((template) => (
             <button
               key={template.id}
               onClick={() => handleSelect(template)}

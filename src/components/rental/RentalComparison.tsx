@@ -35,6 +35,8 @@ export function RentalComparison({ deal, analysis }: Props) {
           sizeSqm={deal.property.sizeSqm}
           rooms={deal.property.rooms}
           propertyType={deal.property.propertyType}
+          country={deal.property.country}
+          currency={deal.property.currency}
           userLtrRent={deal.rentalAssumptions.ltr.monthlyRent || undefined}
           userNightlyRate={deal.rentalAssumptions.str.avgNightlyRate || undefined}
         />

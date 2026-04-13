@@ -20,45 +20,61 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: 'GOOGLE_AI_API_KEY not configured' }), { status: 503 });
     }
 
+    const market = deal.property.country ?? 'BR';
+    const isIsrael = market === 'IL';
+    const isUSA = market === 'US';
+    const currency = deal.property.currency ?? 'BRL';
+    const currencySymbol = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : 'R$';
     const price = deal.property.agreedPrice || deal.property.askingPrice;
     const { returns, rentalAnalysis, purchaseCosts, dealScore, marketContext } = analysis;
 
-    const systemPrompt = `You are a senior real estate investment analyst specializing in the Brazilian market.
+    const marketName = isIsrael ? 'Israeli' : isUSA ? 'US' : 'Brazilian';
+    const benchmarkLabel = isIsrael ? 'Prime Rate' : isUSA ? 'Fed Rate' : 'Selic';
+    const transferTaxLabel = isIsrael ? 'Mas Rechisha' : isUSA ? 'Transfer Tax' : 'ITBI';
+    const propertyTaxLabel = isIsrael ? 'Arnona' : isUSA ? 'Property Tax' : 'IPTU';
+    const buildingFeeLabel = isIsrael ? 'Vaad Bayit' : isUSA ? 'HOA' : 'Condo';
+    const locationLine = `${deal.property.neighborhood || ''} ${deal.property.city}${!isIsrael ? `, ${deal.property.state}` : ''}${isUSA ? ', USA' : ''}`;
+
+    const systemPrompt = `You are a senior real estate investment analyst specializing in the ${marketName} market.
 
 DEAL CONTEXT:
-- Property: ${deal.property.rooms}BR ${deal.property.propertyType}, ${deal.property.sizeSqm}m², ${deal.property.neighborhood || ''} ${deal.property.city}, ${deal.property.state}
-- Price: R$${price.toLocaleString('pt-BR')} (R$${returns.pricePerSqm.toFixed(0)}/m²)
-- Market avg: R$${marketContext.avgPricePerSqmArea.toFixed(0)}/m² | Price vs market: ${marketContext.priceVsMarketPercent > 0 ? '+' : ''}${marketContext.priceVsMarketPercent.toFixed(1)}%
+- Property: ${deal.property.rooms}BR ${deal.property.propertyType}, ${deal.property.sizeSqm}m², ${locationLine}
+- Price: ${currencySymbol}${price.toLocaleString()} (${currencySymbol}${returns.pricePerSqm.toFixed(0)}/m²)
+- Market avg: ${currencySymbol}${marketContext.avgPricePerSqmArea.toFixed(0)}/m² | Price vs market: ${marketContext.priceVsMarketPercent > 0 ? '+' : ''}${marketContext.priceVsMarketPercent.toFixed(1)}%
 - Gross yield: ${returns.grossYield.toFixed(2)}% | Net yield: ${returns.netYield.toFixed(2)}% | Cap rate: ${returns.capRate.toFixed(2)}%
 - Cash-on-cash Y1: ${returns.cashOnCashReturn.toFixed(2)}%
 - 10Y IRR: ${returns.projections.find(p => p.years === 10)?.irr.toFixed(1) ?? '—'}%
 - Deal score: ${dealScore.total}/100 (${dealScore.rating})
 - Financing: ${deal.financing.financingType === 'cash' ? 'Cash' : `${deal.financing.interestRate}%/yr ${deal.financing.loanType}, ${deal.financing.loanTermYears}y, ${deal.financing.downPaymentPercent.toFixed(0)}% down`}
-- Monthly mortgage payment: R$${analysis.financing.monthlyPayment.toLocaleString('pt-BR')}
-- Y1 monthly cash flow: R$${(analysis.cashFlows[0]?.cashFlow / 12).toFixed(0)}
-- LTR monthly rent: R$${deal.rentalAssumptions.ltr.monthlyRent.toLocaleString('pt-BR')}
-- Airbnb avg nightly: R$${deal.rentalAssumptions.str.avgNightlyRate} at ${deal.rentalAssumptions.str.occupancyRatePercent}% occupancy
-- STR net annual: R$${rentalAnalysis.str.netAnnualIncome.toLocaleString('pt-BR')}
-- LTR net annual: R$${rentalAnalysis.ltr.netAnnualIncome.toLocaleString('pt-BR')}
-- STR premium over LTR: ${rentalAnalysis.strPremiumPercent.toFixed(1)}%
-- ITBI: R$${purchaseCosts.itbi.toLocaleString('pt-BR')} | Total closing costs: R$${purchaseCosts.totalTransactionCosts.toLocaleString('pt-BR')}
-- Total cash required: R$${purchaseCosts.totalCashRequired.toLocaleString('pt-BR')}
-- IPTU: R$${analysis.annualCosts.iptu.toLocaleString('pt-BR')}/yr | Condo: R$${analysis.annualCosts.condominium.toLocaleString('pt-BR')}/yr
+- Monthly mortgage: ${currencySymbol}${analysis.financing.monthlyPayment.toLocaleString()}
+- Y1 monthly cash flow: ${currencySymbol}${(analysis.cashFlows[0]?.cashFlow / 12).toFixed(0)}
+- LTR monthly rent: ${currencySymbol}${deal.rentalAssumptions.ltr.monthlyRent.toLocaleString()}
+- Airbnb avg nightly: ${currencySymbol}${deal.rentalAssumptions.str.avgNightlyRate} at ${deal.rentalAssumptions.str.occupancyRatePercent}% occupancy
+- STR net annual: ${currencySymbol}${rentalAnalysis.str.netAnnualIncome.toLocaleString()}
+- LTR net annual: ${currencySymbol}${rentalAnalysis.ltr.netAnnualIncome.toLocaleString()}
+- STR premium: ${rentalAnalysis.strPremiumPercent.toFixed(1)}%
+- ${transferTaxLabel}: ${currencySymbol}${purchaseCosts.itbi.toLocaleString()} | Total closing costs: ${currencySymbol}${purchaseCosts.totalTransactionCosts.toLocaleString()}
+- Total cash required: ${currencySymbol}${purchaseCosts.totalCashRequired.toLocaleString()}
+- ${propertyTaxLabel}: ${currencySymbol}${analysis.annualCosts.iptu.toLocaleString()}/yr | ${buildingFeeLabel}: ${currencySymbol}${analysis.annualCosts.condominium.toLocaleString()}/yr
 
 BUYER PROFILE:
-- Brazil status: ${deal.buyerProfile.citizenshipStatus}
+- Market status: ${deal.buyerProfile.citizenshipStatus}
 - Tax residency: ${deal.buyerProfile.taxResidency}
 - Passports: ${deal.buyerProfile.nationalities.join(', ')}${deal.buyerProfile.isRomanianPassportHolder ? ' + Romanian (EU)' : ''}
-- Has CPF: ${deal.buyerProfile.brazilianCPF}
-- Purchase structure: ${deal.buyerProfile.isCompanyPurchase ? 'Company (PJ/CNPJ)' : 'Individual (CPF)'}
+- First home: ${deal.buyerProfile.isFirstHomeBuyer}
+- Purchase structure: ${deal.buyerProfile.isCompanyPurchase ? 'Company/LLC' : 'Individual'}
 
 MARKET CONTEXT:
-- Selic rate: ${marketContext.selicRate}% | IPCA inflation: ${marketContext.inflationRate}%
-- USD/BRL: ${(1 / marketContext.exchangeRates.USD).toFixed(2)}
+- ${benchmarkLabel}: ${marketContext.selicRate}% | Inflation: ${marketContext.inflationRate}%
 
 Be concise and specific. Use numbers from the deal context. Respond in English.
-For tax questions about Israeli residents: reference Section 122A (15% flat), Form 1301, and credit for Brazilian taxes paid.
-For questions about Romanian passport holders with Israeli tax residency: clarify that the passport doesn't change tax obligations.`;
+${isUSA
+  ? `For US tax questions: reference federal income tax brackets (10-37%), long-term capital gains (0/15/20%), depreciation (27.5yr residential), 1031 exchange, and FIRPTA (15% at sale for foreign sellers).
+For foreign buyers: ITIN, W-8ECI election (avoids 30% gross withholding on rent), LLC structure for liability protection.
+For state-specific questions: FL has no income tax, TX has no income tax, NY/CA have high state income taxes.`
+  : isIsrael
+  ? 'For Israeli tax questions: reference Mas Rechisha brackets, Track 2 (10% flat rental tax), Mas Shevach (25% CGT), and Bank of Israel mortgage regulations.'
+  : 'For tax questions about Israeli residents: reference Section 122A (15% flat), Form 1301, and credit for Brazilian taxes paid. For Romanian passport holders with Israeli tax residency: clarify that the passport does not change tax obligations.'}`;
 
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
     const model = genAI.getGenerativeModel({

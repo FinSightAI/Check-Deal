@@ -15,6 +15,8 @@ interface Props {
 export function QuickEditPanel({ deal, onClose, onReanalyzed }: Props) {
   const { updateDeal, saveDeal, setAnalysis, setAnalyzing, setAnalysisError } = useDealStore();
   const price = deal.property.agreedPrice || deal.property.askingPrice;
+  const currency = deal.property.currency ?? 'BRL';
+  const currencySymbol = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : 'R$';
 
   const [form, setForm] = useState({
     price: price,
@@ -133,14 +135,14 @@ export function QuickEditPanel({ deal, onClose, onReanalyzed }: Props) {
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Price</p>
             <div className="grid grid-cols-1 gap-3">
-              {field('Purchase price', 'price', { prefix: 'R$', min: 0, step: 10000 })}
+              {field('Purchase price', 'price', { prefix: currencySymbol, min: 0, step: 10000 })}
             </div>
           </div>
 
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Rental</p>
             <div className="grid grid-cols-2 gap-3">
-              {field('Monthly rent', 'monthlyRent', { prefix: 'R$', min: 0, step: 100 })}
+              {field('Monthly rent', 'monthlyRent', { prefix: currencySymbol, min: 0, step: 100 })}
               {field('Vacancy rate', 'vacancyRate', { suffix: '%', min: 0, max: 50, step: 0.5 })}
               {field('Annual rent growth', 'rentGrowth', { suffix: '%', min: 0, max: 20, step: 0.5 })}
             </div>
@@ -154,8 +156,8 @@ export function QuickEditPanel({ deal, onClose, onReanalyzed }: Props) {
                 {field('Down payment', 'downPaymentPercent', { suffix: '%', min: 5, max: 100, step: 1 })}
               </div>
               <p className="text-xs text-slate-400 mt-1.5">
-                Down: {formatCurrency(form.price * form.downPaymentPercent / 100, 'BRL', true)} ·
-                Loan: {formatCurrency(form.price * (1 - form.downPaymentPercent / 100), 'BRL', true)}
+                Down: {formatCurrency(form.price * form.downPaymentPercent / 100, currency, true)} ·
+                Loan: {formatCurrency(form.price * (1 - form.downPaymentPercent / 100), currency, true)}
               </p>
             </div>
           )}

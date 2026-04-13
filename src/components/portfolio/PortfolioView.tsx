@@ -29,6 +29,11 @@ export function PortfolioView({ deals, onBack, onSelectDeal }: Props) {
   }
 
   // Portfolio aggregates
+  // Detect if portfolio has mixed currencies
+  const currencies = [...new Set(analyzed.map(d => d.property.currency ?? 'BRL'))];
+  const isMixedCurrency = currencies.length > 1;
+  const primaryCurrency = currencies[0] ?? 'BRL'; // for single-currency portfolios
+
   const totalInvested = analyzed.reduce((sum, d) => sum + (d.analysis!.purchaseCosts.totalCashRequired), 0);
   const totalPropertyValue = analyzed.reduce((sum, d) => sum + (d.property.agreedPrice || d.property.askingPrice), 0);
   const avgGrossYield = analyzed.reduce((sum, d) => sum + d.analysis!.returns.grossYield, 0) / analyzed.length;
@@ -86,13 +91,20 @@ export function PortfolioView({ deals, onBack, onSelectDeal }: Props) {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
+        {/* Mixed currency warning */}
+        {isMixedCurrency && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
+            ⚠️ Portfolio contains deals in multiple currencies ({currencies.join(', ')}). Aggregate totals below are summed without conversion — use individual deal metrics for accurate comparison.
+          </div>
+        )}
+
         {/* Aggregate stat cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total Invested', value: formatCurrency(totalInvested, 'BRL', true), icon: DollarSign, color: 'text-blue-600' },
-            { label: 'Portfolio Value', value: formatCurrency(totalPropertyValue, 'BRL', true), icon: Building2, color: 'text-emerald-600' },
+            { label: 'Total Invested', value: isMixedCurrency ? '—' : formatCurrency(totalInvested, primaryCurrency, true), icon: DollarSign, color: 'text-blue-600' },
+            { label: 'Portfolio Value', value: isMixedCurrency ? '—' : formatCurrency(totalPropertyValue, primaryCurrency, true), icon: Building2, color: 'text-emerald-600' },
             { label: 'Avg Gross Yield', value: formatPercent(avgGrossYield), icon: TrendingUp, color: avgGrossYield >= 6 ? 'text-emerald-600' : 'text-orange-500' },
-            { label: 'Monthly Rent', value: formatCurrency(totalMonthlyRent, 'BRL'), icon: BarChart2, color: 'text-blue-600' },
+            { label: 'Monthly Rent', value: isMixedCurrency ? '—' : formatCurrency(totalMonthlyRent, primaryCurrency), icon: BarChart2, color: 'text-blue-600' },
           ].map((stat) => (
             <div key={stat.label} className="bg-white border border-slate-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -109,7 +121,7 @@ export function PortfolioView({ deals, onBack, onSelectDeal }: Props) {
           {[
             { label: 'Avg Net Yield', value: formatPercent(avgNetYield) },
             { label: 'Avg Cap Rate', value: formatPercent(avgCapRate) },
-            { label: 'Monthly Cash Flow', value: formatCurrency(totalMonthlyCF, 'BRL'), highlight: totalMonthlyCF >= 0 },
+            { label: 'Monthly Cash Flow', value: isMixedCurrency ? '—' : formatCurrency(totalMonthlyCF, primaryCurrency), highlight: totalMonthlyCF >= 0 },
             { label: 'Avg Deal Score', value: `${avgScore.toFixed(0)}/100` },
           ].map((m) => (
             <div key={m.label} className="bg-white border border-slate-200 rounded-xl p-4 text-sm">
@@ -125,7 +137,7 @@ export function PortfolioView({ deals, onBack, onSelectDeal }: Props) {
         {total10YValue > 0 && (
           <div className="bg-gradient-to-r from-blue-50 to-emerald-50 border border-blue-100 rounded-xl p-5">
             <div className="text-sm text-slate-500 mb-1">Projected total portfolio value in 10 years</div>
-            <div className="text-3xl font-bold text-blue-700">{formatCurrency(total10YValue, 'BRL', true)}</div>
+            <div className="text-3xl font-bold text-blue-700">{isMixedCurrency ? '—' : formatCurrency(total10YValue, primaryCurrency, true)}</div>
             <div className="text-xs text-slate-400 mt-1">Based on individual appreciation assumptions per deal</div>
           </div>
         )}
@@ -174,6 +186,8 @@ export function PortfolioView({ deals, onBack, onSelectDeal }: Props) {
               const price = deal.property.agreedPrice || deal.property.askingPrice;
               const a = deal.analysis!;
               const cf1Monthly = (a.cashFlows[0]?.cashFlow ?? 0) / 12;
+              const dc = deal.property.currency ?? 'BRL';
+              const marketFlag = deal.property.country === 'IL' ? '🇮🇱' : deal.property.country === 'US' ? '🇺🇸' : '🇧🇷';
               return (
                 <div
                   key={deal.id}
@@ -183,6 +197,7 @@ export function PortfolioView({ deals, onBack, onSelectDeal }: Props) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm">{marketFlag}</span>
                         <span className="font-semibold text-slate-800">{deal.name}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getRatingBg(a.dealScore.rating)}`}>
                           <span className={getRatingColor(a.dealScore.rating)}>{a.dealScore.total}/100</span>
@@ -193,14 +208,14 @@ export function PortfolioView({ deals, onBack, onSelectDeal }: Props) {
                       </div>
                     </div>
                     <div className="text-right ml-4">
-                      <div className="font-bold text-slate-800">{formatCurrency(price, 'BRL', true)}</div>
-                      <div className="text-xs text-slate-400">{formatCurrency(a.returns.pricePerSqm, 'BRL')}/m²</div>
+                      <div className="font-bold text-slate-800">{formatCurrency(price, dc, true)}</div>
+                      <div className="text-xs text-slate-400">{formatCurrency(a.returns.pricePerSqm, dc)}/m²</div>
                     </div>
                   </div>
                   <div className="flex gap-4 mt-3 text-xs">
                     <span>Yield: <strong className="text-blue-600">{formatPercent(a.returns.grossYield)}</strong></span>
                     <span>Cap: <strong>{formatPercent(a.returns.capRate)}</strong></span>
-                    <span>CF/mo: <strong className={cf1Monthly >= 0 ? 'text-emerald-600' : 'text-red-500'}>{formatCurrency(cf1Monthly, 'BRL')}</strong></span>
+                    <span>CF/mo: <strong className={cf1Monthly >= 0 ? 'text-emerald-600' : 'text-red-500'}>{formatCurrency(cf1Monthly, dc)}</strong></span>
                     <span className="ml-auto text-slate-400 capitalize">{deal.rentalAssumptions.strategy}</span>
                   </div>
                 </div>

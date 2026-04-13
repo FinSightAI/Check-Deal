@@ -1,6 +1,6 @@
 'use client';
 
-import { Deal } from '@/lib/types/deal';
+import { Deal, CurrencyCode } from '@/lib/types/deal';
 import { formatCurrency, formatPercent, getRatingColor } from '@/lib/utils/formatters';
 import { ArrowLeft, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
@@ -14,15 +14,15 @@ interface Metric {
   label: string;
   category: string;
   getValue: (d: Deal) => number | null;
-  format: (v: number) => string;
+  format: (v: number, currency: CurrencyCode) => string;
   higherIsBetter: boolean;
   threshold?: { good: number; bad: number };
 }
 
 const METRICS: Metric[] = [
   // Price
-  { label: 'Purchase Price', category: 'Property', getValue: d => d.property.agreedPrice || d.property.askingPrice, format: v => formatCurrency(v, 'BRL', true), higherIsBetter: false },
-  { label: 'Price / m²', category: 'Property', getValue: d => d.analysis ? d.analysis.returns.pricePerSqm : null, format: v => `${formatCurrency(v, 'BRL')}/m²`, higherIsBetter: false },
+  { label: 'Purchase Price', category: 'Property', getValue: d => d.property.agreedPrice || d.property.askingPrice, format: (v, c) => formatCurrency(v, c, true), higherIsBetter: false },
+  { label: 'Price / m²', category: 'Property', getValue: d => d.analysis ? d.analysis.returns.pricePerSqm : null, format: (v, c) => `${formatCurrency(v, c)}/m²`, higherIsBetter: false },
   { label: 'vs Market', category: 'Property', getValue: d => d.analysis?.marketContext.priceVsMarketPercent ?? null, format: v => `${v > 0 ? '+' : ''}${v.toFixed(1)}%`, higherIsBetter: false },
   // Yield
   { label: 'Gross Yield', category: 'Returns', getValue: d => d.analysis?.returns.grossYield ?? null, format: v => formatPercent(v), higherIsBetter: true, threshold: { good: 6, bad: 4 } },
@@ -32,17 +32,17 @@ const METRICS: Metric[] = [
   // Long-term
   { label: '10Y IRR', category: 'Long-Term', getValue: d => d.analysis?.returns.projections.find(p => p.years === 10)?.irr ?? null, format: v => formatPercent(v), higherIsBetter: true, threshold: { good: 12, bad: 7 } },
   { label: '10Y CAGR', category: 'Long-Term', getValue: d => d.analysis?.returns.projections.find(p => p.years === 10)?.annualizedReturn ?? null, format: v => formatPercent(v), higherIsBetter: true },
-  { label: '10Y Value', category: 'Long-Term', getValue: d => d.analysis?.returns.projections.find(p => p.years === 10)?.projectedValue ?? null, format: v => formatCurrency(v, 'BRL', true), higherIsBetter: true },
+  { label: '10Y Value', category: 'Long-Term', getValue: d => d.analysis?.returns.projections.find(p => p.years === 10)?.projectedValue ?? null, format: (v, c) => formatCurrency(v, c, true), higherIsBetter: true },
   // Cash flow
-  { label: 'Monthly CF (Y1)', category: 'Cash Flow', getValue: d => d.analysis ? (d.analysis.cashFlows[0]?.cashFlow ?? 0) / 12 : null, format: v => formatCurrency(v, 'BRL'), higherIsBetter: true, threshold: { good: 0, bad: -500 } },
-  { label: 'Monthly Rent', category: 'Cash Flow', getValue: d => d.rentalAssumptions.ltr.monthlyRent, format: v => formatCurrency(v, 'BRL'), higherIsBetter: true },
+  { label: 'Monthly CF (Y1)', category: 'Cash Flow', getValue: d => d.analysis ? (d.analysis.cashFlows[0]?.cashFlow ?? 0) / 12 : null, format: (v, c) => formatCurrency(v, c), higherIsBetter: true, threshold: { good: 0, bad: -500 } },
+  { label: 'Monthly Rent', category: 'Cash Flow', getValue: d => d.rentalAssumptions.ltr.monthlyRent, format: (v, c) => formatCurrency(v, c), higherIsBetter: true },
   // Score
   { label: 'Deal Score', category: 'Overall', getValue: d => d.analysis?.dealScore.total ?? null, format: v => `${v.toFixed(0)}/100`, higherIsBetter: true, threshold: { good: 65, bad: 45 } },
   { label: 'Risk Factors', category: 'Overall', getValue: d => d.analysis?.riskFactors.filter(r => r.severity === 'high').length ?? null, format: v => `${v} high`, higherIsBetter: false, threshold: { good: 0, bad: 2 } },
   // Costs
-  { label: 'Total Cash Required', category: 'Costs', getValue: d => d.analysis?.purchaseCosts.totalCashRequired ?? null, format: v => formatCurrency(v, 'BRL', true), higherIsBetter: false },
-  { label: 'ITBI', category: 'Costs', getValue: d => d.analysis?.purchaseCosts.itbi ?? null, format: v => formatCurrency(v, 'BRL'), higherIsBetter: false },
-  { label: 'Annual Costs', category: 'Costs', getValue: d => d.analysis?.annualCosts.total ?? null, format: v => formatCurrency(v, 'BRL'), higherIsBetter: false },
+  { label: 'Total Cash Required', category: 'Costs', getValue: d => d.analysis?.purchaseCosts.totalCashRequired ?? null, format: (v, c) => formatCurrency(v, c, true), higherIsBetter: false },
+  { label: 'Transfer Tax', category: 'Costs', getValue: d => d.analysis?.purchaseCosts.itbi ?? null, format: (v, c) => formatCurrency(v, c), higherIsBetter: false },
+  { label: 'Annual Costs', category: 'Costs', getValue: d => d.analysis?.annualCosts.total ?? null, format: (v, c) => formatCurrency(v, c), higherIsBetter: false },
 ];
 
 const CATEGORIES = ['Overall', 'Returns', 'Cash Flow', 'Long-Term', 'Property', 'Costs'];
@@ -127,7 +127,7 @@ export function DealComparison({ deals, onBack, onSelectDeal }: Props) {
                   {deal.property.neighborhood ? `${deal.property.neighborhood}, ` : ''}{deal.property.city}
                 </div>
                 <div className="text-xs text-slate-500">{deal.property.rooms}BR · {deal.property.sizeSqm}m²</div>
-                <div className="mt-2 font-bold text-slate-800">{formatCurrency(price, 'BRL', true)}</div>
+                <div className="mt-2 font-bold text-slate-800">{formatCurrency(price, (deal.property.currency ?? 'BRL') as CurrencyCode, true)}</div>
                 {deal.analysis && (
                   <div className="mt-1 flex items-center gap-1.5">
                     <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
@@ -163,6 +163,7 @@ export function DealComparison({ deals, onBack, onSelectDeal }: Props) {
                       {displayDeals.map((deal, i) => {
                         const val = values[i];
                         const isBest = i === bestIdx;
+                        const currency = (deal.property.currency ?? 'BRL') as CurrencyCode;
                         return (
                           <div key={deal.id} className={`px-4 py-3 text-sm text-right ${isBest ? 'font-bold' : 'text-slate-600'}`}
                             style={{ color: isBest ? COLORS[i] : undefined }}>
@@ -173,7 +174,7 @@ export function DealComparison({ deals, onBack, onSelectDeal }: Props) {
                                     ? <TrendingUp className="w-3 h-3 flex-shrink-0" />
                                     : <TrendingDown className="w-3 h-3 flex-shrink-0" />
                                 )}
-                                {metric.format(val)}
+                                {metric.format(val, currency)}
                                 <MetricColor value={val} threshold={metric.threshold} higherIsBetter={metric.higherIsBetter} />
                               </span>
                             )}

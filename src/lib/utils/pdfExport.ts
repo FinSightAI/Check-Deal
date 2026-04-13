@@ -8,6 +8,23 @@ export function exportDealToPDF(deal: Deal) {
   const analysis = deal.analysis;
   if (!analysis) return;
 
+  const isIsrael = deal.property.country === 'IL';
+  const isUSA = deal.property.country === 'US';
+  const currency = deal.property.currency ?? 'BRL';
+  const marketLabel = isIsrael ? 'Israel' : isUSA ? 'USA' : 'Brazil';
+  const transferTaxLabel = isIsrael ? 'Mas Rechisha (Purchase Tax)' : isUSA ? 'Transfer Tax + Title Insurance' : 'ITBI (Transfer Tax)';
+  const propertyTaxLabel = isIsrael ? 'Arnona' : isUSA ? 'Property Tax' : 'IPTU';
+  const buildingFeeLabel = isIsrael ? 'Vaad Bayit' : isUSA ? 'HOA / Condo Fee' : 'Condomínio';
+  const benchmarkLabel = isIsrael ? 'Prime Rate' : isUSA ? 'Fed Rate' : 'Selic Rate';
+  const legalLabel = isIsrael ? 'Lawyer + Tabu (Cartório equiv.)' : isUSA ? 'Escrow / Closing Fees' : 'Registration & Notary (Cartório)';
+  const legalFeesLabel = isIsrael ? 'Legal Fees (Orech Din)' : isUSA ? 'Legal Fees (Attorney)' : 'Legal Fees (Advogado)';
+  const brokerLabel = isIsrael ? 'Broker Commission (Matiach)' : isUSA ? "Buyer's Agent Commission" : 'Broker Commission (Corretagem)';
+  const locationLine = isIsrael
+    ? `${deal.property.neighborhood ? deal.property.neighborhood + ', ' : ''}${deal.property.city}, Israel`
+    : isUSA
+    ? `${deal.property.neighborhood ? deal.property.neighborhood + ', ' : ''}${deal.property.city}, ${deal.property.state}, USA`
+    : `${deal.property.neighborhood ? deal.property.neighborhood + ', ' : ''}${deal.property.city}, ${deal.property.state}, Brazil`;
+
   const price = deal.property.agreedPrice || deal.property.askingPrice;
   const { returns, purchaseCosts, annualCosts, rentalAnalysis, dealScore, marketContext, financing, riskFactors } = analysis;
   const yr5 = returns.projections.find((p) => p.years === 5);
@@ -59,10 +76,10 @@ export function exportDealToPDF(deal: Deal) {
       return `
       <tr>
         <td>${currentYear + cf.year}</td>
-        <td class="num">${formatCurrency(cf.propertyValue, 'BRL', true)}</td>
-        <td class="num ${cf.cashFlow >= 0 ? 'green' : 'red'}">${formatCurrency(cf.cashFlow, 'BRL')}</td>
-        <td class="num ${cf.cumulativeCashFlow >= 0 ? 'green' : 'red'}">${formatCurrency(cf.cumulativeCashFlow, 'BRL', true)}</td>
-        <td class="num">${formatCurrency(cf.equity, 'BRL', true)}</td>
+        <td class="num">${formatCurrency(cf.propertyValue, currency, true)}</td>
+        <td class="num ${cf.cashFlow >= 0 ? 'green' : 'red'}">${formatCurrency(cf.cashFlow, currency)}</td>
+        <td class="num ${cf.cumulativeCashFlow >= 0 ? 'green' : 'red'}">${formatCurrency(cf.cumulativeCashFlow, currency, true)}</td>
+        <td class="num">${formatCurrency(cf.equity, currency, true)}</td>
         <td class="num">${formatPercent(cf.netAfterTax / Math.max(1, cf.propertyValue) * 100)}</td>
       </tr>`;
     })
@@ -70,8 +87,8 @@ export function exportDealToPDF(deal: Deal) {
 
   // Annual costs breakdown — using AnnualCostBreakdown fields
   const annualCostItems = [
-    annualCosts.condominium > 0 ? { label: 'Condomínio', val: annualCosts.condominium } : null,
-    annualCosts.iptu > 0 ? { label: 'IPTU', val: annualCosts.iptu } : null,
+    annualCosts.condominium > 0 ? { label: buildingFeeLabel, val: annualCosts.condominium } : null,
+    annualCosts.iptu > 0 ? { label: propertyTaxLabel, val: annualCosts.iptu } : null,
     annualCosts.managementFee > 0 ? { label: 'Management Fee', val: annualCosts.managementFee } : null,
     annualCosts.maintenance > 0 ? { label: 'Maintenance', val: annualCosts.maintenance } : null,
     annualCosts.insurance > 0 ? { label: 'Insurance', val: annualCosts.insurance } : null,
@@ -138,11 +155,11 @@ export function exportDealToPDF(deal: Deal) {
   <div class="header">
     <div>
       <div class="logo">CheckDeal</div>
-      <div class="logo-sub">Real Estate Investment Analysis · Brazil</div>
+      <div class="logo-sub">Real Estate Investment Analysis · ${marketLabel}</div>
     </div>
     <div style="text-align:right">
       <div style="font-size:15px;font-weight:700;color:#0f172a">${deal.name}</div>
-      <div style="color:#64748b;margin-top:2px">${deal.property.neighborhood ? deal.property.neighborhood + ', ' : ''}${deal.property.city}, ${deal.property.state}&ensp;·&ensp;${deal.property.rooms}BR ${deal.property.propertyType}&ensp;·&ensp;${deal.property.sizeSqm}m²</div>
+      <div style="color:#64748b;margin-top:2px">${locationLine}&ensp;·&ensp;${deal.property.rooms}BR ${deal.property.propertyType}&ensp;·&ensp;${deal.property.sizeSqm}m²</div>
       <div style="margin-top:5px;display:flex;gap:6px;justify-content:flex-end;align-items:center">
         <span style="font-size:20px;font-weight:800;color:${dealScore.total >= 70 ? '#16a34a' : dealScore.total >= 50 ? '#d97706' : '#dc2626'}">${dealScore.total}</span>
         <span style="font-size:11px;color:#94a3b8">/100</span>
@@ -186,12 +203,12 @@ export function exportDealToPDF(deal: Deal) {
   <!-- Key metrics row 2 -->
   <div class="grid-4" style="margin-top:10px">
     <div class="card metric">
-      <div class="val">${formatCurrency(price, 'BRL', true)}</div>
+      <div class="val">${formatCurrency(price, currency, true)}</div>
       <div class="lbl">Purchase Price</div>
-      <div class="sub">${formatCurrency(returns.pricePerSqm, 'BRL')}/m²</div>
+      <div class="sub">${formatCurrency(returns.pricePerSqm, currency)}/m²</div>
     </div>
     <div class="card metric">
-      <div class="val">${formatCurrency(purchaseCosts.totalCashRequired, 'BRL', true)}</div>
+      <div class="val">${formatCurrency(purchaseCosts.totalCashRequired, currency, true)}</div>
       <div class="lbl">Total Cash In</div>
       <div class="sub">Down + all closing costs</div>
     </div>
@@ -240,14 +257,14 @@ export function exportDealToPDF(deal: Deal) {
         <tr><td>Parking</td><td class="num">${deal.property.parkingSpaces}</td></tr>
         <tr><td>Condition</td><td class="num">${deal.property.condition}</td></tr>
         <tr><td>Year Built</td><td class="num">${deal.property.yearBuilt || '—'}</td></tr>
-        <tr><td>Condomínio/mo</td><td class="num">${deal.property.condominiumMonthly ? formatCurrency(deal.property.condominiumMonthly, 'BRL') : '—'}</td></tr>
-        <tr><td>IPTU/yr</td><td class="num">${deal.property.iptuAnnual ? formatCurrency(deal.property.iptuAnnual, 'BRL') : '—'}</td></tr>
+        <tr><td>${buildingFeeLabel}/mo</td><td class="num">${deal.property.condominiumMonthly ? formatCurrency(deal.property.condominiumMonthly, currency) : '—'}</td></tr>
+        <tr><td>${propertyTaxLabel}/yr</td><td class="num">${deal.property.iptuAnnual ? formatCurrency(deal.property.iptuAnnual, currency) : '—'}</td></tr>
       </table>
     </div>
     <div>
       <h2>Buyer Profile</h2>
       <table>
-        <tr><td>Brazil Status</td><td class="num">${deal.buyerProfile.citizenshipStatus}</td></tr>
+        <tr><td>${marketLabel} Status</td><td class="num">${deal.buyerProfile.citizenshipStatus}</td></tr>
         <tr><td>Tax Residency</td><td class="num">${deal.buyerProfile.taxResidency}</td></tr>
         <tr><td>Passports</td><td class="num">${deal.buyerProfile.nationalities.join(', ')}${deal.buyerProfile.isRomanianPassportHolder ? ' + RO (EU)' : ''}</td></tr>
         <tr><td>Has CPF</td><td class="num">${deal.buyerProfile.brazilianCPF ? 'Yes' : 'No — required'}</td></tr>
@@ -259,12 +276,12 @@ export function exportDealToPDF(deal: Deal) {
         <table>
           <tr><td>Type</td><td class="num">${deal.financing.financingType === 'cash' ? 'Cash (no mortgage)' : deal.financing.financingType}</td></tr>
           ${deal.financing.financingType !== 'cash' ? `
-          <tr><td>Down Payment</td><td class="num">${formatCurrency(deal.financing.downPaymentAmount, 'BRL', true)} (${deal.financing.downPaymentPercent.toFixed(0)}%)</td></tr>
-          <tr><td>Loan Amount</td><td class="num">${formatCurrency(deal.financing.loanAmount, 'BRL', true)}</td></tr>
+          <tr><td>Down Payment</td><td class="num">${formatCurrency(deal.financing.downPaymentAmount, currency, true)} (${deal.financing.downPaymentPercent.toFixed(0)}%)</td></tr>
+          <tr><td>Loan Amount</td><td class="num">${formatCurrency(deal.financing.loanAmount, currency, true)}</td></tr>
           <tr><td>Rate / Term</td><td class="num">${deal.financing.interestRate}% · ${deal.financing.loanTermYears}y ${deal.financing.loanType}</td></tr>
-          <tr><td>Monthly Payment</td><td class="num bold">${formatCurrency(financing.monthlyPayment, 'BRL')}</td></tr>
-          <tr><td>Total Interest Paid</td><td class="num red">${formatCurrency(financing.totalInterest, 'BRL', true)}</td></tr>
-          ` : `<tr><td>Full Cash Payment</td><td class="num bold">${formatCurrency(price, 'BRL', true)}</td></tr>`}
+          <tr><td>Monthly Payment</td><td class="num bold">${formatCurrency(financing.monthlyPayment, currency)}</td></tr>
+          <tr><td>Total Interest Paid</td><td class="num red">${formatCurrency(financing.totalInterest, currency, true)}</td></tr>
+          ` : `<tr><td>Full Cash Payment</td><td class="num bold">${formatCurrency(price, currency, true)}</td></tr>`}
         </table>
       </div>
     </div>
@@ -273,22 +290,22 @@ export function exportDealToPDF(deal: Deal) {
   <!-- Purchase Cost Breakdown -->
   <h2>Purchase Cost Breakdown</h2>
   <table>
-    <tr><th>Item</th><th style="text-align:right">Amount (R$)</th><th style="text-align:right">% of Price</th></tr>
-    <tr><td>Property Price</td><td class="num bold">${formatCurrency(purchaseCosts.propertyPrice, 'BRL')}</td><td class="num">—</td></tr>
-    <tr><td>ITBI (Transfer Tax)</td><td class="num orange">${formatCurrency(purchaseCosts.itbi, 'BRL')}</td><td class="num orange">${((purchaseCosts.itbi / price) * 100).toFixed(2)}%</td></tr>
-    <tr><td>Registration & Notary (Cartório)</td><td class="num">${formatCurrency(purchaseCosts.registrationFee, 'BRL')}</td><td class="num">${((purchaseCosts.registrationFee / price) * 100).toFixed(2)}%</td></tr>
-    <tr><td>Legal Fees (Advogado)</td><td class="num">${formatCurrency(purchaseCosts.legalFees, 'BRL')}</td><td class="num">${((purchaseCosts.legalFees / price) * 100).toFixed(2)}%</td></tr>
-    ${purchaseCosts.mortgageArrangementFee ? `<tr><td>Mortgage Arrangement Fee</td><td class="num">${formatCurrency(purchaseCosts.mortgageArrangementFee, 'BRL')}</td><td class="num">${((purchaseCosts.mortgageArrangementFee / price) * 100).toFixed(2)}%</td></tr>` : ''}
-    ${purchaseCosts.brokerCommission ? `<tr><td>Broker Commission (Corretagem)</td><td class="num">${formatCurrency(purchaseCosts.brokerCommission, 'BRL')}</td><td class="num">${((purchaseCosts.brokerCommission / price) * 100).toFixed(2)}%</td></tr>` : ''}
-    ${purchaseCosts.renovationBudget ? `<tr><td>Renovation Budget</td><td class="num">${formatCurrency(purchaseCosts.renovationBudget, 'BRL')}</td><td class="num">—</td></tr>` : ''}
+    <tr><th>Item</th><th style="text-align:right">Amount</th><th style="text-align:right">% of Price</th></tr>
+    <tr><td>Property Price</td><td class="num bold">${formatCurrency(purchaseCosts.propertyPrice, currency)}</td><td class="num">—</td></tr>
+    <tr><td>${transferTaxLabel}</td><td class="num orange">${formatCurrency(purchaseCosts.itbi, currency)}</td><td class="num orange">${((purchaseCosts.itbi / price) * 100).toFixed(2)}%</td></tr>
+    <tr><td>${legalLabel}</td><td class="num">${formatCurrency(purchaseCosts.registrationFee, currency)}</td><td class="num">${((purchaseCosts.registrationFee / price) * 100).toFixed(2)}%</td></tr>
+    <tr><td>${legalFeesLabel}</td><td class="num">${formatCurrency(purchaseCosts.legalFees, currency)}</td><td class="num">${((purchaseCosts.legalFees / price) * 100).toFixed(2)}%</td></tr>
+    ${purchaseCosts.mortgageArrangementFee ? `<tr><td>Mortgage Arrangement Fee</td><td class="num">${formatCurrency(purchaseCosts.mortgageArrangementFee, currency)}</td><td class="num">${((purchaseCosts.mortgageArrangementFee / price) * 100).toFixed(2)}%</td></tr>` : ''}
+    ${purchaseCosts.brokerCommission ? `<tr><td>${brokerLabel}</td><td class="num">${formatCurrency(purchaseCosts.brokerCommission, currency)}</td><td class="num">${((purchaseCosts.brokerCommission / price) * 100).toFixed(2)}%</td></tr>` : ''}
+    ${purchaseCosts.renovationBudget ? `<tr><td>Renovation Budget</td><td class="num">${formatCurrency(purchaseCosts.renovationBudget, currency)}</td><td class="num">—</td></tr>` : ''}
     <tr style="background:#f8fafc">
       <td class="bold">Total Transaction Costs</td>
-      <td class="num bold blue">${formatCurrency(purchaseCosts.totalTransactionCosts, 'BRL')}</td>
+      <td class="num bold blue">${formatCurrency(purchaseCosts.totalTransactionCosts, currency)}</td>
       <td class="num bold blue">${((purchaseCosts.totalTransactionCosts / price) * 100).toFixed(1)}%</td>
     </tr>
     <tr style="background:#eff6ff">
       <td class="bold">Total Cash Required</td>
-      <td class="num bold blue">${formatCurrency(purchaseCosts.totalCashRequired, 'BRL')}</td>
+      <td class="num bold blue">${formatCurrency(purchaseCosts.totalCashRequired, currency)}</td>
       <td class="num" style="color:#64748b">(down + costs)</td>
     </tr>
   </table>
@@ -297,17 +314,17 @@ export function exportDealToPDF(deal: Deal) {
   ${annualCostItems.length > 0 ? `
   <h2>Annual Operating Costs</h2>
   <table>
-    <tr><th>Item</th><th style="text-align:right">Annual (R$)</th><th style="text-align:right">Monthly (R$)</th></tr>
+    <tr><th>Item</th><th style="text-align:right">Annual</th><th style="text-align:right">Monthly</th></tr>
     ${annualCostItems.map(item => `
     <tr>
       <td>${item.label}</td>
-      <td class="num">${formatCurrency(item.val, 'BRL')}</td>
-      <td class="num" style="color:#94a3b8">${formatCurrency(item.val / 12, 'BRL')}</td>
+      <td class="num">${formatCurrency(item.val, currency)}</td>
+      <td class="num" style="color:#94a3b8">${formatCurrency(item.val / 12, currency)}</td>
     </tr>`).join('')}
     <tr style="background:#f8fafc">
       <td class="bold">Total Annual Costs</td>
-      <td class="num bold red">${formatCurrency(annualCostItems.reduce((s, x) => s + x.val, 0), 'BRL')}</td>
-      <td class="num bold red">${formatCurrency(annualCostItems.reduce((s, x) => s + x.val, 0) / 12, 'BRL')}/mo</td>
+      <td class="num bold red">${formatCurrency(annualCostItems.reduce((s, x) => s + x.val, 0), currency)}</td>
+      <td class="num bold red">${formatCurrency(annualCostItems.reduce((s, x) => s + x.val, 0) / 12, currency)}/mo</td>
     </tr>
   </table>` : ''}
 
@@ -315,8 +332,8 @@ export function exportDealToPDF(deal: Deal) {
   <h2>Rental Analysis</h2>
   <table>
     <tr><th>Metric</th><th style="text-align:right">Long-Term Rental (LTR)</th><th style="text-align:right">Short-Term / Airbnb (STR)</th></tr>
-    <tr><td>Gross Annual Income</td><td class="num">${formatCurrency(rentalAnalysis.ltr.grossAnnualIncome, 'BRL')}</td><td class="num">${formatCurrency(rentalAnalysis.str.grossAnnualRevenue, 'BRL')}</td></tr>
-    <tr><td>Net Annual Income</td><td class="num bold green">${formatCurrency(rentalAnalysis.ltr.netAnnualIncome, 'BRL')}</td><td class="num bold green">${formatCurrency(rentalAnalysis.str.netAnnualIncome, 'BRL')}</td></tr>
+    <tr><td>Gross Annual Income</td><td class="num">${formatCurrency(rentalAnalysis.ltr.grossAnnualIncome, currency)}</td><td class="num">${formatCurrency(rentalAnalysis.str.grossAnnualRevenue, currency)}</td></tr>
+    <tr><td>Net Annual Income</td><td class="num bold green">${formatCurrency(rentalAnalysis.ltr.netAnnualIncome, currency)}</td><td class="num bold green">${formatCurrency(rentalAnalysis.str.netAnnualIncome, currency)}</td></tr>
     <tr><td>Gross Yield</td><td class="num">${formatPercent(rentalAnalysis.ltr.grossYield)}</td><td class="num">${formatPercent(rentalAnalysis.str.grossYield)}</td></tr>
     <tr><td>Net Yield</td><td class="num bold blue">${formatPercent(rentalAnalysis.ltr.netYield)}</td><td class="num bold blue">${formatPercent(rentalAnalysis.str.netYield)}</td></tr>
     ${rentalAnalysis.str.breakEvenOccupancy ? `<tr><td>Break-even Occupancy</td><td class="num" style="color:#94a3b8">—</td><td class="num">${rentalAnalysis.str.breakEvenOccupancy.toFixed(0)}%</td></tr>` : ''}
@@ -351,12 +368,12 @@ export function exportDealToPDF(deal: Deal) {
     <div class="card">
       <h3>${proj!.years}-Year Outlook (${currentYear + proj!.years})</h3>
       <table>
-        <tr><td>Projected Value</td><td class="num bold">${formatCurrency(proj!.projectedValue, 'BRL', true)}</td></tr>
+        <tr><td>Projected Value</td><td class="num bold">${formatCurrency(proj!.projectedValue, currency, true)}</td></tr>
         <tr><td>Total Return</td><td class="num bold ${proj!.totalReturn >= 0 ? 'green' : 'red'}">${proj!.totalReturn.toFixed(0)}%</td></tr>
         <tr><td>CAGR</td><td class="num">${formatPercent(proj!.annualizedReturn)}</td></tr>
         <tr><td>IRR</td><td class="num ${proj!.irr >= 10 ? 'green' : proj!.irr >= 6 ? 'orange' : 'red'}">${formatPercent(proj!.irr)}</td></tr>
-        <tr><td>Equity Built</td><td class="num">${formatCurrency(proj!.equityBuilt, 'BRL', true)}</td></tr>
-        <tr><td>Total Cash Flow</td><td class="num ${proj!.totalCashFlow >= 0 ? 'green' : 'red'}">${formatCurrency(proj!.totalCashFlow, 'BRL', true)}</td></tr>
+        <tr><td>Equity Built</td><td class="num">${formatCurrency(proj!.equityBuilt, currency, true)}</td></tr>
+        <tr><td>Total Cash Flow</td><td class="num ${proj!.totalCashFlow >= 0 ? 'green' : 'red'}">${formatCurrency(proj!.totalCashFlow, currency, true)}</td></tr>
       </table>
     </div>`).join('')}
   </div>
@@ -374,12 +391,12 @@ export function exportDealToPDF(deal: Deal) {
   </table>
 
   <!-- Market Context -->
-  <h2>Market Context (Brazil ${currentYear})</h2>
+  <h2>Market Context (${marketLabel} ${currentYear})</h2>
   <div class="grid-4">
-    <div class="card"><div class="lbl">Selic Rate</div><div style="font-weight:600;font-size:13px">${marketContext.selicRate}%</div></div>
-    <div class="card"><div class="lbl">IPCA Inflation</div><div style="font-weight:600;font-size:13px">${marketContext.inflationRate}%</div></div>
+    <div class="card"><div class="lbl">${benchmarkLabel}</div><div style="font-weight:600;font-size:13px">${marketContext.selicRate}%</div></div>
+    <div class="card"><div class="lbl">Inflation</div><div style="font-weight:600;font-size:13px">${marketContext.inflationRate}%</div></div>
     <div class="card"><div class="lbl">Real Cap Rate</div><div style="font-weight:600;font-size:13px;color:${returns.realCapRate > 0 ? '#16a34a' : '#dc2626'}">${formatPercent(returns.realCapRate)}</div></div>
-    <div class="card"><div class="lbl">USD/BRL</div><div style="font-weight:600;font-size:13px">R$${(1 / marketContext.exchangeRates.USD).toFixed(2)}</div></div>
+    ${!isUSA ? `<div class="card"><div class="lbl">USD/${isIsrael ? 'ILS' : 'BRL'}</div><div style="font-weight:600;font-size:13px">${isIsrael ? '₪' : 'R$'}${(1 / marketContext.exchangeRates.USD).toFixed(2)}</div></div>` : `<div class="card"><div class="lbl">Fed Rate</div><div style="font-weight:600;font-size:13px">${marketContext.selicRate}%</div></div>`}
   </div>
 
   ${notes ? `
@@ -389,10 +406,14 @@ export function exportDealToPDF(deal: Deal) {
   ` : ''}
 
   <div class="footer">
-    <p><strong>CheckDeal</strong> · Generated ${new Date().toISOString().split('T')[0]} · ${deal.property.city}, ${deal.property.state}, Brazil</p>
+    <p><strong>CheckDeal</strong> · Generated ${new Date().toISOString().split('T')[0]} · ${locationLine}</p>
     <p style="margin-top:4px">This report is for informational purposes only and does not constitute financial, legal, or tax advice.
-    Always consult a licensed real estate professional (corretor CRECI), accountant (contador), and lawyer (advogado) in Brazil
-    and your country of tax residency before making investment decisions. Past projections are not guarantees of future performance.</p>
+    ${isUSA
+      ? 'Always consult a licensed real estate professional (Realtor), real estate attorney, and CPA specializing in non-resident investors in the US and your country of tax residency before making investment decisions.'
+      : isIsrael
+      ? 'Always consult a licensed real estate professional (matiach), lawyer (orech din), and accountant (roa heshbon) in Israel and your country of tax residency before making investment decisions.'
+      : 'Always consult a licensed real estate professional (corretor CRECI), accountant (contador), and lawyer (advogado) in Brazil and your country of tax residency before making investment decisions.'}
+    Past projections are not guarantees of future performance.</p>
   </div>
 
 </div>

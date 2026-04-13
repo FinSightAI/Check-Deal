@@ -112,7 +112,7 @@ export default function HomePage() {
             </div>
             <div>
               <span className="text-white font-bold text-lg">CheckDeal</span>
-              <span className="text-blue-400 text-xs ml-2">Brazil Real Estate</span>
+              <span className="text-blue-400 text-xs ml-2">🇧🇷 🇮🇱 🇺🇸 Real Estate</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -153,7 +153,7 @@ export default function HomePage() {
             <span className="text-blue-400"> worth it?</span>
           </h1>
           <p className="text-slate-400 text-xl max-w-2xl mx-auto">
-            Analyze Brazilian real estate deals with AI-powered insights, complete tax calculations,
+            Analyze real estate deals in Brazil, Israel, and the US with AI-powered insights, complete tax calculations,
             market comparisons, and Airbnb vs long-term rental projections.
           </p>
         </div>
@@ -208,12 +208,13 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Brazil focus note */}
+        {/* Multi-market note */}
         <div className="mt-12 bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center">
-          <p className="text-green-300 font-medium mb-2">🇧🇷 Focused on the Brazilian Market</p>
+          <p className="text-green-300 font-medium mb-2">🇧🇷 🇮🇱 🇺🇸 Multi-Market Support</p>
           <p className="text-slate-400 text-sm">
-            Full ITBI, IPTU, Carnê-Leão, and GCAP calculations. SAC & PRICE amortization systems.
-            Caixa, FGTS, and Minha Casa Minha Vida program support. Foreign buyer guidance.
+            <strong className="text-slate-300">Brazil:</strong> ITBI, IPTU, Carnê-Leão, GCAP · SAC & PRICE · Caixa, FGTS, MCMV &nbsp;|&nbsp;
+            <strong className="text-slate-300">Israel:</strong> Mas Rechisha, Arnona, Track 2 rental tax · Bank of Israel mortgage rules · Tabu &nbsp;|&nbsp;
+            <strong className="text-slate-300">USA:</strong> Transfer tax · Property tax · Federal income tax · FIRPTA · 30-yr fixed · DSCR loans
           </p>
         </div>
       </main>

@@ -1,7 +1,8 @@
 'use client';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Deal, DealAnalysis, BuyerProfile } from '@/lib/types/deal';
+import { Deal, DealAnalysis, BuyerProfile, CountryCode, CurrencyCode } from '@/lib/types/deal';
+import { COUNTRIES } from '@/lib/constants/countries';
 
 const DEFAULT_BUYER_PROFILE: BuyerProfile = {
   citizenshipStatus: 'foreigner',
@@ -84,6 +85,7 @@ interface DealStore {
   createDeal: () => Deal;
   updateDeal: (updates: Partial<Deal>) => void;
   updateBuyerProfile: (updates: Partial<BuyerProfile>) => void;
+  updateMarket: (country: CountryCode) => void;
   setCurrentDeal: (deal: Deal | null) => void;
   saveDeal: () => void;
   deleteDeal: (id: string) => void;
@@ -119,6 +121,57 @@ export const useDealStore = create<DealStore>()(
             ? { ...state.currentDeal, ...updates, updatedAt: new Date().toISOString() }
             : null,
         }));
+      },
+
+      updateMarket: (country) => {
+        set((state) => {
+          if (!state.currentDeal) return state;
+          const countryConfig = COUNTRIES[country];
+          const currency = countryConfig?.currency as CurrencyCode ?? 'BRL';
+
+          // Market-specific financing defaults
+          const financingOverrides = country === 'IL'
+            ? {
+                financingType: 'bank' as const,
+                loanType: 'fixed' as const,
+                interestRate: 5.75,
+                loanTermYears: 25,
+                usesFGTS: false,
+                financedByMCMV: false,
+              }
+            : country === 'US'
+            ? {
+                financingType: 'mortgage' as const,
+                loanType: 'fixed' as const,
+                interestRate: 6.9,
+                loanTermYears: 30,
+                usesFGTS: false,
+                financedByMCMV: false,
+              }
+            : {
+                financingType: 'mortgage' as const,
+                loanType: 'SAC' as const,
+                interestRate: 10.5,
+                loanTermYears: 20,
+              };
+
+          return {
+            currentDeal: {
+              ...state.currentDeal,
+              property: {
+                ...state.currentDeal.property,
+                country,
+                currency,
+                state: country === 'IL' ? '' : country === 'US' ? (state.currentDeal.property.state || 'FL') : (state.currentDeal.property.state || 'SP'),
+              },
+              financing: {
+                ...state.currentDeal.financing,
+                ...financingOverrides,
+              },
+              updatedAt: new Date().toISOString(),
+            },
+          };
+        });
       },
 
       updateBuyerProfile: (updates) => {

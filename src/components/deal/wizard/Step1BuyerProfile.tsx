@@ -7,12 +7,36 @@ interface Props {
   onNext: () => void;
 }
 
-const CITIZENSHIP_OPTIONS: { value: CitizenshipStatus; label: string; desc: string }[] = [
-  { value: 'citizen', label: '🇧🇷 Brazilian Citizen', desc: 'Born in Brazil or naturalized' },
-  { value: 'permanent-resident', label: '📋 Permanent Resident', desc: 'Has permanent residency in Brazil' },
-  { value: 'temporary-resident', label: '🛂 Temporary Resident', desc: 'Lives in Brazil on temporary visa' },
-  { value: 'foreigner', label: '🌍 Non-Resident Foreigner', desc: 'Lives outside Brazil, investing remotely' },
+const MARKET_OPTIONS = [
+  { code: 'BR' as CountryCode, flag: '🇧🇷', name: 'Brazil', desc: 'BRL · São Paulo, Rio, Florianópolis...' },
+  { code: 'IL' as CountryCode, flag: '🇮🇱', name: 'Israel', desc: '₪ · Tel Aviv, Jerusalem, Haifa...' },
+  { code: 'US' as CountryCode, flag: '🇺🇸', name: 'United States', desc: '$ · Miami, NYC, Austin, LA...' },
 ];
+
+function getCitizenshipOptions(market: CountryCode): { value: CitizenshipStatus; label: string; desc: string }[] {
+  if (market === 'IL') {
+    return [
+      { value: 'citizen', label: '🇮🇱 Israeli Citizen', desc: 'Israeli citizen or permanent resident' },
+      { value: 'permanent-resident', label: '📋 New Immigrant (Oleh)', desc: 'Recently made aliyah — may have tax benefits' },
+      { value: 'temporary-resident', label: '🛂 Temporary Resident', desc: 'Living in Israel on temporary basis' },
+      { value: 'foreigner', label: '🌍 Non-Resident Foreigner', desc: 'Lives outside Israel, investing remotely' },
+    ];
+  }
+  if (market === 'US') {
+    return [
+      { value: 'citizen', label: '🇺🇸 US Citizen / Green Card', desc: 'US citizen or lawful permanent resident' },
+      { value: 'permanent-resident', label: '📋 Visa Holder (E-2 / EB-5)', desc: 'On investor or work visa — resident for tax purposes' },
+      { value: 'temporary-resident', label: '🛂 Non-Resident on Visa', desc: 'Present in the US on temporary visa' },
+      { value: 'foreigner', label: '🌍 Foreign National (NRA)', desc: 'Non-resident alien — FIRPTA and withholding applies' },
+    ];
+  }
+  return [
+    { value: 'citizen', label: '🇧🇷 Brazilian Citizen', desc: 'Born in Brazil or naturalized' },
+    { value: 'permanent-resident', label: '📋 Permanent Resident', desc: 'Has permanent residency in Brazil' },
+    { value: 'temporary-resident', label: '🛂 Temporary Resident', desc: 'Lives in Brazil on temporary visa' },
+    { value: 'foreigner', label: '🌍 Non-Resident Foreigner', desc: 'Lives outside Brazil, investing remotely' },
+  ];
+}
 
 const PASSPORT_OPTIONS: { code: CountryCode | 'RO'; flag: string; name: string; isEU?: boolean }[] = [
   { code: 'IL', flag: '🇮🇱', name: 'Israeli' },
@@ -43,10 +67,15 @@ const TAX_RESIDENCY_OPTIONS: { value: TaxResidencyCode; flag: string; label: str
 const EU_COUNTRIES = ['DE', 'PT', 'ES', 'RO', 'FR', 'IT', 'NL', 'BE', 'AT', 'SE', 'FI', 'DK', 'PL', 'CZ', 'HU', 'SK', 'SI', 'HR', 'BG', 'EE', 'LT', 'LV', 'LU', 'MT', 'CY', 'IE', 'GR'];
 
 export function Step1BuyerProfile({ onNext }: Props) {
-  const { currentDeal, updateBuyerProfile } = useDealStore();
+  const { currentDeal, updateBuyerProfile, updateMarket } = useDealStore();
   const profile = currentDeal?.buyerProfile;
+  const market = currentDeal?.property.country ?? 'BR';
+  const isIsrael = market === 'IL';
+  const isUSA = market === 'US';
 
   if (!profile) return null;
+
+  const CITIZENSHIP_OPTIONS = getCitizenshipOptions(market);
 
   const toggleNationality = (code: string) => {
     const current = profile.nationalities || [];
@@ -86,10 +115,43 @@ export function Step1BuyerProfile({ onNext }: Props) {
         </p>
       </div>
 
-      {/* Brazil relationship */}
+      {/* Market selector */}
       <div className="space-y-3">
         <label className="text-sm font-semibold text-slate-700 block">
-          Your relationship with Brazil
+          Which market are you investing in?
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {MARKET_OPTIONS.map((m) => (
+            <button
+              key={m.code}
+              onClick={() => updateMarket(m.code)}
+              className={`text-left p-4 rounded-xl border-2 transition-all ${
+                market === m.code
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-slate-200 hover:border-slate-300 bg-white'
+              }`}
+            >
+              <div className="font-semibold text-slate-800 text-lg">{m.flag} {m.name}</div>
+              <div className="text-sm text-slate-500 mt-0.5">{m.desc}</div>
+            </button>
+          ))}
+        </div>
+        {market === 'IL' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+            🇮🇱 Israeli market: Mas Rechisha, Arnona, Track 2 rental tax, Bank of Israel-regulated mortgages.
+          </div>
+        )}
+        {market === 'US' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+            🇺🇸 US market: 30-year fixed mortgage, depreciation deduction, 1031 exchange, FIRPTA for foreign investors.
+          </div>
+        )}
+      </div>
+
+      {/* Market relationship */}
+      <div className="space-y-3">
+        <label className="text-sm font-semibold text-slate-700 block">
+          Your relationship with {isIsrael ? 'Israel' : isUSA ? 'the United States' : 'Brazil'}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {CITIZENSHIP_OPTIONS.map((opt) => (
@@ -187,46 +249,155 @@ export function Step1BuyerProfile({ onNext }: Props) {
       </div>
 
       {/* Tax residency implications */}
-      {profile.taxResidency && profile.taxResidency !== 'BR' && profile.taxResidency !== 'OTHER' && (
-        <TaxResidencyImplications residency={profile.taxResidency} hasRomanian={profile.isRomanianPassportHolder} />
+      {profile.taxResidency && profile.taxResidency !== 'OTHER' && !(isUSA && profile.taxResidency === 'US') && !(isIsrael && profile.taxResidency === 'IL') && profile.taxResidency !== 'BR' && (
+        <TaxResidencyImplications residency={profile.taxResidency} hasRomanian={profile.isRomanianPassportHolder} market={market} />
       )}
 
-      {/* CPF */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-        <div>
-          <h3 className="font-semibold text-amber-900">Brazilian CPF (Tax ID) — Required for all buyers</h3>
-          <p className="text-sm text-amber-700 mt-1">
-            All foreign buyers need a CPF to purchase property, open a bank account, and pay Brazilian taxes.
+      {/* ITIN / SSN (US — for foreign investors) */}
+      {isUSA && profile.citizenshipStatus === 'foreigner' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+          <h3 className="font-semibold text-amber-900">US Tax Identification Number (ITIN)</h3>
+          <p className="text-sm text-amber-700">
+            Foreign investors in US real estate need an ITIN (Individual Taxpayer Identification Number) to file US tax returns,
+            claim treaty benefits, and receive rental income from US sources.
           </p>
-        </div>
-        <div className="flex items-center gap-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="radio" checked={profile.brazilianCPF === true}
-              onChange={() => updateBuyerProfile({ brazilianCPF: true })}
-              className="w-4 h-4 accent-blue-500" />
-            <span className="text-sm font-medium text-slate-700">✅ I have a CPF</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="radio" checked={profile.brazilianCPF === false}
-              onChange={() => updateBuyerProfile({ brazilianCPF: false })}
-              className="w-4 h-4 accent-blue-500" />
-            <span className="text-sm font-medium text-slate-700">❌ I need to get one</span>
-          </label>
-        </div>
-        {!profile.brazilianCPF && (
           <p className="text-xs text-amber-700">
-            💡 Apply at the Brazilian consulate in your country or at Banco do Brasil branches abroad.
-            {profile.nationalities?.includes('IL') && ' In Israel: Brazilian Consulate in Tel Aviv, Rua Kaufmann area. Process: 1-3 weeks.'}
+            💡 Apply via Form W-7 (with your US tax return or independently). Processing: 7-11 weeks.
+            Your US CPA can often help obtain one during tax filing.
           </p>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* LLC recommendation (US) */}
+      {isUSA && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+          <h3 className="font-semibold text-green-900">LLC Structure Recommendation</h3>
+          <p className="text-sm text-green-700">
+            Most US real estate investors hold property in a single-member LLC for liability protection.
+            It&apos;s a pass-through entity (no double taxation) and keeps your personal assets separate from the property.
+          </p>
+          <p className="text-xs text-green-700">
+            💡 Foreign investors: a US LLC is also required to open a US bank account and receive rental income cleanly.
+            Delaware and Wyoming LLCs are popular for out-of-state/foreign investors.
+          </p>
+        </div>
+      )}
+
+      {/* CPF (Brazil only) */}
+      {!isIsrael && !isUSA && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-amber-900">Brazilian CPF (Tax ID) — Required for all buyers</h3>
+            <p className="text-sm text-amber-700 mt-1">
+              All foreign buyers need a CPF to purchase property, open a bank account, and pay Brazilian taxes.
+            </p>
+          </div>
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={profile.brazilianCPF === true}
+                onChange={() => updateBuyerProfile({ brazilianCPF: true })}
+                className="w-4 h-4 accent-blue-500" />
+              <span className="text-sm font-medium text-slate-700">✅ I have a CPF</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={profile.brazilianCPF === false}
+                onChange={() => updateBuyerProfile({ brazilianCPF: false })}
+                className="w-4 h-4 accent-blue-500" />
+              <span className="text-sm font-medium text-slate-700">❌ I need to get one</span>
+            </label>
+          </div>
+          {!profile.brazilianCPF && (
+            <p className="text-xs text-amber-700">
+              💡 Apply at the Brazilian consulate in your country or at Banco do Brasil branches abroad.
+              {profile.nationalities?.includes('IL') && ' In Israel: Brazilian Consulate in Tel Aviv. Process: 1-3 weeks.'}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* US: first home / investment */}
+      {isUSA && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-blue-900">Primary Residence or Investment?</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              Affects financing terms (owner-occupied gets better rates), capital gains exclusion ($250K single / $500K MFJ), and STR rules.
+            </p>
+          </div>
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={profile.isFirstHomeBuyer === true}
+                onChange={() => updateBuyerProfile({ isFirstHomeBuyer: true })}
+                className="w-4 h-4 accent-blue-500" />
+              <span className="text-sm font-medium text-slate-700">🏠 Primary residence</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={profile.isFirstHomeBuyer === false}
+                onChange={() => updateBuyerProfile({ isFirstHomeBuyer: false })}
+                className="w-4 h-4 accent-blue-500" />
+              <span className="text-sm font-medium text-slate-700">📦 Investment / rental property</span>
+            </label>
+          </div>
+          {!profile.isFirstHomeBuyer && (
+            <p className="text-xs text-blue-700">
+              💡 Investment properties require 20-25% down (no PMI waiver), slightly higher rates.
+              Can deduct depreciation (1/27.5 of building value/year), mortgage interest, and expenses on Schedule E.
+            </p>
+          )}
+          {profile.isFirstHomeBuyer && (
+            <p className="text-xs text-blue-700">
+              💡 Primary residence: up to 3-5% down (FHA/conventional). After 2+ years: $250K ($500K MFJ) capital gains exclusion on sale.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Israel: first-home status */}
+      {isIsrael && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+          <div>
+            <h3 className="font-semibold text-blue-900">First Home Purchase (Israel)?</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              First-time buyers pay 0% Mas Rechisha up to ₪1,978,745 — a major saving vs. the 8% investment rate.
+            </p>
+          </div>
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={profile.isFirstHomeBuyer === true}
+                onChange={() => updateBuyerProfile({ isFirstHomeBuyer: true })}
+                className="w-4 h-4 accent-blue-500" />
+              <span className="text-sm font-medium text-slate-700">✅ First home in Israel</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={profile.isFirstHomeBuyer === false}
+                onChange={() => updateBuyerProfile({ isFirstHomeBuyer: false })}
+                className="w-4 h-4 accent-blue-500" />
+              <span className="text-sm font-medium text-slate-700">📦 Investment / additional property</span>
+            </label>
+          </div>
+          {profile.isFirstHomeBuyer && profile.citizenshipStatus !== 'foreigner' && (
+            <p className="text-xs text-blue-700">
+              💡 First home exemption: 0% up to ₪1,978,745, then 3.5% up to ₪2,347,040, then standard rates.
+            </p>
+          )}
+          {profile.citizenshipStatus === 'foreigner' && (
+            <p className="text-xs text-orange-700 bg-orange-50 rounded p-2">
+              ⚠️ Non-residents: standard investment rate applies (8% up to ₪5,872,725) — first-home exemption not available.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Purchase structure */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
         <div>
           <h3 className="font-semibold text-slate-800">Purchase Structure</h3>
           <p className="text-sm text-slate-500 mt-1">
-            Buying via a Brazilian company (PJ) can significantly reduce rental income tax.
+            {isIsrael
+              ? 'Buying via a company in Israel generally has no tax advantage for residential rental — individual ownership is typical.'
+              : isUSA
+              ? 'An LLC provides liability protection with pass-through taxation — the most common structure for US rental properties.'
+              : 'Buying via a Brazilian company (PJ) can significantly reduce rental income tax.'}
           </p>
         </div>
         <div className="flex items-center gap-6">
@@ -234,19 +405,34 @@ export function Step1BuyerProfile({ onNext }: Props) {
             <input type="radio" checked={!profile.isCompanyPurchase}
               onChange={() => updateBuyerProfile({ isCompanyPurchase: false })}
               className="w-4 h-4 accent-blue-500" />
-            <span className="text-sm text-slate-700">Personal (CPF)</span>
+            <span className="text-sm text-slate-700">
+              {isIsrael || isUSA ? 'Personal (individual)' : 'Personal (CPF)'}
+            </span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="radio" checked={profile.isCompanyPurchase}
               onChange={() => updateBuyerProfile({ isCompanyPurchase: true })}
               className="w-4 h-4 accent-blue-500" />
-            <span className="text-sm text-slate-700">Brazilian Company (CNPJ)</span>
+            <span className="text-sm text-slate-700">
+              {isIsrael ? 'Israeli Company (Ltd.)' : isUSA ? 'LLC / Corporation' : 'Brazilian Company (CNPJ)'}
+            </span>
           </label>
         </div>
-        {profile.isCompanyPurchase && (
+        {profile.isCompanyPurchase && !isIsrael && (
           <p className="text-xs text-green-700 bg-green-50 rounded p-2">
             ✅ Company (Lucro Presumido): ~11.33% effective tax on rental vs up to 27.5% personal.
             {profile.taxResidency === 'IL' && ' Note: distributions from Brazilian company to Israeli resident are taxable in Israel. Consult a cross-border CPA.'}
+          </p>
+        )}
+        {profile.isCompanyPurchase && isIsrael && (
+          <p className="text-xs text-orange-700 bg-orange-50 rounded p-2">
+            ⚠️ Company purchases in Israel: 23% corporate tax + dividend withholding. For residential rental, personal ownership is usually more efficient. Consult an Israeli accountant.
+          </p>
+        )}
+        {profile.isCompanyPurchase && isUSA && (
+          <p className="text-xs text-green-700 bg-green-50 rounded p-2">
+            ✅ LLC (pass-through): no double taxation. Shields personal assets. Most US investment properties are held in LLCs.
+            Foreign-owned LLCs: file Form 5472 annually. Use a registered agent in the LLC&apos;s state.
           </p>
         )}
       </div>
@@ -254,7 +440,9 @@ export function Step1BuyerProfile({ onNext }: Props) {
       {/* Properties owned */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-semibold text-slate-700 block mb-2">Properties in Brazil</label>
+          <label className="text-sm font-semibold text-slate-700 block mb-2">
+            {isUSA ? 'Properties in the US' : 'Properties in Brazil'}
+          </label>
           <input type="number" min="0" value={profile.existingPropertiesInBrazil}
             onChange={(e) => updateBuyerProfile({ existingPropertiesInBrazil: parseInt(e.target.value) || 0 })}
             className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
@@ -278,27 +466,41 @@ export function Step1BuyerProfile({ onNext }: Props) {
   );
 }
 
-function TaxResidencyImplications({ residency, hasRomanian }: { residency: TaxResidencyCode; hasRomanian: boolean }) {
+function TaxResidencyImplications({ residency, hasRomanian, market }: { residency: TaxResidencyCode; hasRomanian: boolean; market: CountryCode }) {
+  const investingInUS = market === 'US';
+  const investingInIL = market === 'IL';
   const info: Record<string, { color: string; lines: string[] }> = {
     IL: {
       color: 'bg-blue-50 border-blue-200 text-blue-900',
-      lines: [
-        '📋 Must report Brazilian rental income on Israeli annual return (Form 1301).',
-        '💡 Section 122A option: 15% flat tax on net foreign rental income — usually optimal.',
-        '🔄 Brazilian taxes paid can be credited against Israeli tax (no double taxation).',
+      lines: investingInUS ? [
+        '📋 Israeli residents investing in the US: must report US rental income on Israeli Form 1301.',
+        '💡 Section 122A option: 15% flat tax on net foreign rental income — often optimal vs. progressive rates.',
+        '🔄 US taxes paid can be credited against Israeli tax via Form 1301.',
         '⚠️ Must notify Israeli Tax Authority within 30 days of acquiring foreign real estate.',
-        '📊 Form 150 required if property + other foreign assets exceed ₪1.9M (~R$2.4M).',
+        '📊 Form 150 required if property + foreign assets exceed ₪1.9M.',
+        hasRomanian ? '🇷🇴 Romanian passport does NOT affect Israeli tax obligations.' : '',
+      ].filter(Boolean) : [
+        '📋 Must report rental income on Israeli annual return (Form 1301).',
+        '💡 Section 122A option: 15% flat tax on net foreign rental income — usually optimal.',
+        '🔄 Foreign taxes paid can be credited against Israeli tax (no double taxation).',
+        '⚠️ Must notify Israeli Tax Authority within 30 days of acquiring foreign real estate.',
+        '📊 Form 150 required if property + other foreign assets exceed ₪1.9M.',
         hasRomanian ? '🇷🇴 Romanian passport: useful for EU banking and transfers, does NOT affect Israeli tax obligations.' : '',
       ].filter(Boolean),
     },
     US: {
       color: 'bg-red-50 border-red-200 text-red-900',
-      lines: [
+      lines: investingInUS ? [
+        '✅ Investing in US real estate as a US resident — standard Schedule E reporting.',
+        '📋 Depreciation (27.5yr), mortgage interest, and expenses all deductible.',
+        '💡 1031 Exchange: defer capital gains by reinvesting into like-kind property within 180 days.',
+        '🏦 $250K single / $500K MFJ primary residence capital gains exclusion after 2 years.',
+      ] : [
         '🦅 US citizens/residents must report worldwide income (FATCA compliance).',
-        '📋 Foreign rental income on Schedule E. Brazilian tax credited on Form 1116.',
-        '⚠️ FBAR required if Brazilian bank accounts exceed $10,000 at any point.',
+        '📋 Foreign rental income on Schedule E. Local tax credited on Form 1116.',
+        '⚠️ FBAR required if foreign bank accounts exceed $10,000 at any point.',
         '🏦 Form 8938 (FATCA) if foreign assets exceed $50,000.',
-        '💡 No Brazil-US tax treaty — unilateral credit applies.',
+        '💡 No Brazil-US or Israel-US comprehensive tax treaty — unilateral credit applies.',
       ],
     },
     AE: {

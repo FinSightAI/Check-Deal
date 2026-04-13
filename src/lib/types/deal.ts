@@ -46,20 +46,27 @@ export interface PropertyDetails {
   condition: ConditionType;
   isNewDevelopment: boolean; // Novo empreendimento
 
-  // Brazilian-specific
-  hasHabitese: boolean; // Habite-se (occupancy permit)
-  condominiumMonthly?: number; // Condomínio
-  iptuAnnual?: number; // Imposto Predial e Territorial Urbano
+  // Brazil-specific
+  hasHabitese?: boolean; // Habite-se (occupancy permit)
+  condominiumMonthly?: number; // Condomínio (BR) / Vaad Bayit (IL) monthly
+  iptuAnnual?: number; // IPTU (BR) / Arnona (IL) annual
+
+  // Market-specific overrides (used by non-Brazil markets)
+  marketSpecific?: {
+    arnona?: number;     // IL: monthly arnona (₪/month) — overrides estimate
+    vaadBayit?: number;  // IL: monthly vaad bayit (₪/month) — overrides estimate
+    tabuFee?: number;    // IL: tabu registration fee override
+  };
 }
 
 export interface FinancingDetails {
-  financingType: 'cash' | 'mortgage' | 'caixa' | 'private-bank'; // caixa = Caixa Econômica Federal
+  financingType: 'cash' | 'mortgage' | 'caixa' | 'private-bank' | 'bank'; // caixa = Caixa Econômica Federal; bank = generic bank mortgage
   downPaymentAmount: number;
   downPaymentPercent: number;
   loanAmount: number;
   interestRate: number; // Annual %
   loanTermYears: number;
-  loanType: 'fixed' | 'variable' | 'SAC' | 'PRICE'; // SAC and PRICE are Brazilian amortization systems
+  loanType: 'fixed' | 'variable' | 'SAC' | 'PRICE' | 'adjustable'; // SAC/PRICE = Brazilian; fixed/variable/adjustable = universal
 
   // Brazilian specifics
   usesFGTS: boolean; // FGTS (Severance Fund) for down payment
@@ -263,7 +270,8 @@ export interface DealAnalysis {
     avgPricePerSqmArea: number;
     avgYieldArea: number;
     inflationRate: number;
-    selicRate: number; // Brazil's benchmark interest rate
+    selicRate: number; // Benchmark interest rate (Selic for BR, Prime for IL)
+    benchmarkRateName?: string; // Human-readable name for selicRate field
     fipeBenchmark?: number;
     exchangeRates: Record<string, number>;
   };

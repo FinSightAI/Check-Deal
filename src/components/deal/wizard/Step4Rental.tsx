@@ -27,7 +27,8 @@ export function Step4Rental({ onNext, onBack }: Props) {
         property.state,
         property.sizeSqm,
         property.rooms,
-        property.condition
+        property.condition,
+        property.country
       );
       setAirbnbEstimate(est);
 
@@ -95,6 +96,8 @@ export function Step4Rental({ onNext, onBack }: Props) {
             sizeSqm={property.sizeSqm}
             rooms={property.rooms}
             propertyType={property.propertyType}
+            country={property.country}
+            currency={property.currency}
             userLtrRent={rental.ltr.monthlyRent || undefined}
             userNightlyRate={rental.str.avgNightlyRate || undefined}
             onApplyLtr={(rent) => updateLTR({ monthlyRent: rent })}

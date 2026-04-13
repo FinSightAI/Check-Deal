@@ -5,6 +5,8 @@ import { useDealStore } from '@/lib/store/dealStore';
 import { Sparkles, Link2, FileText, CheckCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ExtractedData {
+  country?: 'BR' | 'IL' | 'US';
+  currency?: 'BRL' | 'ILS' | 'USD';
   address: string | null;
   city: string | null;
   neighborhood: string | null;
@@ -23,6 +25,8 @@ interface ExtractedData {
   hasHabitese: boolean;
   condominiumMonthly: number | null;
   iptuAnnual: number | null;
+  arnona: number | null;
+  vaadBayit: number | null;
   dealName: string | null;
 }
 
@@ -74,15 +78,19 @@ export function ImportFromListing({ onImported }: Props) {
     if (!extracted || !currentDeal) return;
 
     const prop = currentDeal.property;
+    const isIsrael = extracted.country === 'IL';
+    const isUSA = extracted.country === 'US';
 
     updateDeal({
       name: extracted.dealName ?? currentDeal.name,
       property: {
         ...prop,
+        ...(extracted.country ? { country: extracted.country } : {}),
+        ...(extracted.currency ? { currency: extracted.currency } : {}),
         ...(extracted.address ? { address: extracted.address } : {}),
         ...(extracted.city ? { city: extracted.city } : {}),
         ...(extracted.neighborhood ? { neighborhood: extracted.neighborhood } : {}),
-        ...(extracted.state ? { state: extracted.state } : {}),
+        ...(extracted.state && !isIsrael ? { state: extracted.state } : {}),
         ...(extracted.propertyType ? { propertyType: extracted.propertyType as typeof prop.propertyType } : {}),
         ...(extracted.askingPrice ? { askingPrice: extracted.askingPrice } : {}),
         ...(extracted.sizeSqm ? { sizeSqm: extracted.sizeSqm } : {}),
@@ -97,8 +105,23 @@ export function ImportFromListing({ onImported }: Props) {
         hasHabitese: extracted.hasHabitese,
         ...(extracted.condominiumMonthly ? { condominiumMonthly: extracted.condominiumMonthly } : {}),
         ...(extracted.iptuAnnual ? { iptuAnnual: extracted.iptuAnnual } : {}),
+        // Israeli-specific fields
+        ...(isIsrael && (extracted.arnona || extracted.vaadBayit) ? {
+          marketSpecific: {
+            ...(prop.marketSpecific ?? {}),
+            ...(extracted.arnona ? { arnona: extracted.arnona } : {}),
+            ...(extracted.vaadBayit ? { vaadBayit: extracted.vaadBayit } : {}),
+          },
+        } : {}),
       },
     });
+
+    // Update financing defaults per market
+    if (isIsrael) {
+      useDealStore.getState().updateMarket('IL');
+    } else if (isUSA) {
+      useDealStore.getState().updateMarket('US');
+    }
 
     onImported();
   };
@@ -118,7 +141,8 @@ export function ImportFromListing({ onImported }: Props) {
         <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">AI</span>
       </div>
       <p className="text-sm text-slate-500 -mt-2">
-        Paste a ZAP Imóveis, VivaReal, or OLX listing URL — or paste the listing text — and Gemini will fill in the property details automatically.
+        Paste a listing URL or text from ZAP Imóveis, VivaReal, Yad2, Madlan — Gemini will extract the property details automatically.
+        Supports 🇧🇷 Brazilian and 🇮🇱 Israeli listings.
       </p>
 
       {/* Mode toggle */}
@@ -144,7 +168,7 @@ export function ImportFromListing({ onImported }: Props) {
         <div className="flex gap-2">
           <input
             type="url"
-            placeholder="https://www.zapimoveis.com.br/imovel/..."
+            placeholder="https://www.zapimoveis.com.br/... or https://www.yad2.co.il/..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && extract()}
@@ -214,24 +238,39 @@ export function ImportFromListing({ onImported }: Props) {
           {showPreview && (
             <div className="border-t border-slate-100 px-4 py-3">
               <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                {[
-                  { label: 'City', value: extracted.city },
-                  { label: 'Neighborhood', value: extracted.neighborhood },
-                  { label: 'State', value: extracted.state },
-                  { label: 'Type', value: extracted.propertyType },
-                  { label: 'Price', value: extracted.askingPrice ? `R$ ${extracted.askingPrice.toLocaleString('pt-BR')}` : null },
-                  { label: 'Size', value: extracted.sizeSqm ? `${extracted.sizeSqm} m²` : null },
-                  { label: 'Rooms', value: extracted.rooms ? `${extracted.rooms} bedrooms` : null },
-                  { label: 'Bathrooms', value: extracted.bathrooms },
-                  { label: 'Parking', value: extracted.parkingSpaces !== null ? extracted.parkingSpaces : null },
-                  { label: 'Floor', value: extracted.floor !== null ? `${extracted.floor}/${extracted.totalFloors ?? '?'}` : null },
-                  { label: 'Year built', value: extracted.yearBuilt },
-                  { label: 'Condition', value: extracted.condition },
-                  { label: 'Condomínio', value: extracted.condominiumMonthly ? `R$ ${extracted.condominiumMonthly.toLocaleString('pt-BR')}/mo` : null },
-                  { label: 'IPTU', value: extracted.iptuAnnual ? `R$ ${extracted.iptuAnnual.toLocaleString('pt-BR')}/yr` : null },
-                  { label: 'New development', value: extracted.isNewDevelopment ? 'Yes' : 'No' },
-                  { label: 'Habite-se', value: extracted.hasHabitese ? 'Yes' : 'No' },
-                ].map(({ label, value }) => (
+                {(() => {
+                  const isIL = extracted.country === 'IL';
+                  const isUS = extracted.country === 'US';
+                  const sym = isIL ? '₪' : isUS ? '$' : 'R$';
+                  const locale = isIL ? 'he-IL' : isUS ? 'en-US' : 'pt-BR';
+                  return [
+                    { label: 'Market', value: isIL ? '🇮🇱 Israel' : isUS ? '🇺🇸 USA' : '🇧🇷 Brazil' },
+                    { label: 'City', value: extracted.city },
+                    { label: 'Neighborhood', value: extracted.neighborhood },
+                    ...(!isIL ? [{ label: 'State', value: extracted.state }] : []),
+                    { label: 'Type', value: extracted.propertyType },
+                    { label: 'Price', value: extracted.askingPrice ? `${sym}${extracted.askingPrice.toLocaleString(locale)}` : null },
+                    { label: 'Size', value: extracted.sizeSqm ? `${extracted.sizeSqm} m²${isUS ? ` (~${Math.round(extracted.sizeSqm * 10.764).toLocaleString()} sqft)` : ''}` : null },
+                    { label: 'Rooms', value: extracted.rooms ? `${extracted.rooms} bedrooms` : null },
+                    { label: 'Bathrooms', value: extracted.bathrooms },
+                    { label: 'Parking', value: extracted.parkingSpaces !== null ? extracted.parkingSpaces : null },
+                    { label: 'Floor', value: extracted.floor !== null ? `${extracted.floor}/${extracted.totalFloors ?? '?'}` : null },
+                    { label: 'Year built', value: extracted.yearBuilt },
+                    { label: 'Condition', value: extracted.condition },
+                    ...(isIL ? [
+                      { label: 'Arnona/mo', value: extracted.arnona ? `₪${extracted.arnona.toLocaleString('he-IL')}` : null },
+                      { label: 'Vaad Bayit/mo', value: extracted.vaadBayit ? `₪${extracted.vaadBayit.toLocaleString('he-IL')}` : null },
+                    ] : isUS ? [
+                      { label: 'HOA/mo', value: extracted.condominiumMonthly ? `$${extracted.condominiumMonthly.toLocaleString('en-US')}/mo` : null },
+                      { label: 'Property Tax/yr', value: extracted.iptuAnnual ? `$${extracted.iptuAnnual.toLocaleString('en-US')}/yr` : null },
+                    ] : [
+                      { label: 'Condomínio', value: extracted.condominiumMonthly ? `R$ ${extracted.condominiumMonthly.toLocaleString('pt-BR')}/mo` : null },
+                      { label: 'IPTU', value: extracted.iptuAnnual ? `R$ ${extracted.iptuAnnual.toLocaleString('pt-BR')}/yr` : null },
+                    ]),
+                    { label: 'New development', value: extracted.isNewDevelopment ? 'Yes' : 'No' },
+                    ...(!isIL && !isUS ? [{ label: 'Habite-se', value: extracted.hasHabitese ? 'Yes' : 'No' }] : []),
+                  ];
+                })().map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between py-0.5">
                     <span className="text-slate-500">{label}</span>
                     {value !== null && value !== undefined ? (
@@ -259,7 +298,7 @@ export function ImportFromListing({ onImported }: Props) {
       )}
 
       <p className="text-xs text-slate-400">
-        Works best with ZAP Imóveis, VivaReal, OLX, and Imovelweb. All data is verified by you before use.
+        Works with ZAP Imóveis, VivaReal, OLX, Imovelweb, Yad2, Madlan, and Homeless.co.il. All data is verified by you before use.
       </p>
     </div>
   );

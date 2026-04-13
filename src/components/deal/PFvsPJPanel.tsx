@@ -11,6 +11,20 @@ export function PFvsPJPanel({ deal }: Props) {
   const { analysis, property, rentalAssumptions } = deal;
   if (!analysis) return null;
 
+  // PF vs PJ is Brazil-specific — not applicable to Israel or US
+  if (property.country !== 'BR') {
+    return (
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center text-slate-500">
+        <p className="font-medium">PF vs PJ analysis is specific to the Brazilian tax system.</p>
+        <p className="text-sm mt-1">
+          {property.country === 'US'
+            ? 'For US properties, consult a CPA about LLC vs individual ownership, depreciation, and federal/state income tax optimization.'
+            : 'For Israeli properties, see the rental income tax tracks (Track 1 / Track 2 / Track 3) in the Cost Breakdown tab.'}
+        </p>
+      </div>
+    );
+  }
+
   const price = property.agreedPrice || property.askingPrice;
   const monthlyRent = rentalAssumptions.ltr.monthlyRent;
   const annualRent = monthlyRent * 12;
