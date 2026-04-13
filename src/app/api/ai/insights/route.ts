@@ -3,7 +3,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Deal, DealAnalysis } from '@/lib/types/deal';
 import { rateLimit, getIP, rateLimitResponse } from '@/lib/rateLimit';
 
-const INSIGHTS_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 }; // 10/hr per IP
 
 function buildSystemPrompt(market: string): string {
   const marketContext = market === 'IL'
@@ -49,7 +48,7 @@ Always respond in English. Be concise but comprehensive. Format your response as
 }
 
 export async function POST(req: NextRequest) {
-  const rl = rateLimit(getIP(req), INSIGHTS_LIMIT);
+  const rl = rateLimit(getIP(req)); // 3/day free, 15/day pro, 30/day yolo
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
   try {
     const { deal, analysis }: { deal: Deal; analysis: DealAnalysis } = await req.json();

@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { rateLimit, getIP, rateLimitResponse } from '@/lib/rateLimit';
 
-const PARSE_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 }; // 10/hr per IP
-
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
 
 async function fetchPageText(url: string): Promise<string | null> {
@@ -109,7 +107,7 @@ LISTING TEXT:
 `;
 
 export async function POST(req: NextRequest) {
-  const rl = rateLimit(getIP(req), PARSE_LIMIT);
+  const rl = rateLimit(getIP(req)); // 3/day free, 15/day pro, 30/day yolo
   if (!rl.allowed) return rateLimitResponse(rl.resetAt);
 
   try {

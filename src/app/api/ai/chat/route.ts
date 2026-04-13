@@ -3,10 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Deal, DealAnalysis } from '@/lib/types/deal';
 import { rateLimit, getIP, rateLimitResponse } from '@/lib/rateLimit';
 
-const CHAT_LIMIT = { max: 15, windowMs: 60 * 60 * 1000 }; // 15/hr per IP
-
 export async function POST(req: NextRequest) {
-  const result = rateLimit(getIP(req), CHAT_LIMIT);
+  const result = rateLimit(getIP(req)); // 3/day free, 15/day pro, 30/day yolo
   if (!result.allowed) return rateLimitResponse(result.resetAt);
 
   try {
