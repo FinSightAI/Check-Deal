@@ -7,13 +7,13 @@ import ThemeToggle from './theme-toggle';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'CheckDeal — Real Estate Investment Analyzer',
-  description: 'Analyze real estate deals with AI-powered insights, Brazilian tax calculations, and market comparisons.',
+  title: 'WizeDeal — Real Estate Investment Analyzer',
+  description: 'Analyze real estate deals with AI-powered insights, tax calculations, and market comparisons. Part of WizeLife.',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'CheckDeal',
+    title: 'WizeDeal',
   },
   icons: {
     icon: '/icon.svg',
