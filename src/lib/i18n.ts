@@ -1,0 +1,201 @@
+export type Lang = 'en' | 'pt';
+
+export const translations = {
+  en: {
+    // Nav
+    appName: 'WizeDeal',
+    tagline: 'AI Real Estate Investment Analyzer',
+    // Main tabs / views
+    newDeal: 'New Analysis',
+    savedDeals: 'Saved Deals',
+    portfolio: 'Portfolio',
+    compare: 'Compare',
+    templates: 'Templates',
+    // Home page
+    homeTitle: 'Analyze Any Property in 30 Seconds',
+    homeSubtitle: 'Paste a listing URL or enter details manually. Get ROI, rental yield, tax impact, and a deal score — for Brazil, Israel, and the US.',
+    startAnalysis: 'Start Analysis',
+    trySample: 'Try Sample Deal',
+    // Deal wizard
+    wizardTitle: 'New Deal Analysis',
+    step1: 'Buyer Profile',
+    step2: 'Property Details',
+    step3: 'Financing',
+    step4: 'Rental Income',
+    step5: 'Review',
+    continueBtn: 'Continue',
+    backBtn: 'Back',
+    runAnalysis: '🔍 Run Full Analysis',
+    analyzing: 'Analyzing...',
+    // Buyer profile
+    buyerType: 'Buyer Type',
+    individual: 'Individual',
+    company: 'Company',
+    country: 'Country / Market',
+    brazil: 'Brazil 🇧🇷',
+    israel: 'Israel 🇮🇱',
+    usa: 'USA 🇺🇸',
+    // Property
+    askingPrice: 'Asking Price',
+    propertySize: 'Size (m²)',
+    city: 'City',
+    propertyType: 'Property Type',
+    apartment: 'Apartment',
+    house: 'House',
+    commercial: 'Commercial',
+    // Financing
+    financingType: 'Financing Type',
+    cash: 'Cash',
+    mortgage: 'Mortgage',
+    downPayment: 'Down Payment',
+    interestRate: 'Interest Rate (%)',
+    loanTerm: 'Loan Term (years)',
+    // Rental
+    expectedRent: 'Expected Monthly Rent',
+    occupancyRate: 'Occupancy Rate (%)',
+    // Results
+    dealScore: 'Deal Score',
+    grossYield: 'Gross Yield',
+    netRoi: 'Net ROI (Year 1)',
+    paybackPeriod: 'Payback Period',
+    monthlyIncome: 'Monthly Income',
+    monthlyExpenses: 'Monthly Expenses',
+    annualTax: 'Annual Tax',
+    transferTax: 'Transfer Tax',
+    vsComps: 'vs. Comparables',
+    aiSummary: 'AI Summary',
+    // Saved deals
+    noDeals: 'No saved deals yet. Start a new analysis!',
+    deleteBtn: 'Delete',
+    viewBtn: 'View',
+    // Portfolio
+    totalProperties: 'Total Properties',
+    totalInvested: 'Total Invested',
+    totalMonthlyIncome: 'Monthly Income',
+    avgYield: 'Avg. Yield',
+    // Compare
+    noComparisons: 'Add deals to compare',
+    // Common
+    save: 'Save',
+    cancel: 'Cancel',
+    loading: 'Loading...',
+    error: 'Something went wrong',
+    close: 'Close',
+    signIn: 'Sign In',
+    signOut: 'Sign Out',
+    language: 'Language',
+    // Home screen specific
+    analyzeNewDeal: 'Analyze a New Deal',
+    startFromTemplate: 'Start from template',
+    viewSavedDeals: 'View {count} saved deal',
+    viewSavedDealsPlural: 'View {count} saved deals',
+    trySampleDeal: 'Try sample deal (Pinheiros, SP)',
+    myDeals: 'My Deals',
+    poweredBy: 'Powered by Gemini AI',
+    heroTitle: 'Is the deal',
+    heroTitleAccent: 'worth it?',
+    heroSubtitle: 'Analyze real estate deals in Brazil, Israel, and the US with AI-powered insights, complete tax calculations, market comparisons, and Airbnb vs long-term rental projections.',
+    multiMarketSupport: '🇧🇷 🇮🇱 🇺🇸 Multi-Market Support',
+  },
+  pt: {
+    // Nav
+    appName: 'WizeDeal',
+    tagline: 'Analisador de Investimento Imobiliário com IA',
+    // Main tabs / views
+    newDeal: 'Nova Análise',
+    savedDeals: 'Negócios Salvos',
+    portfolio: 'Portfólio',
+    compare: 'Comparar',
+    templates: 'Modelos',
+    // Home page
+    homeTitle: 'Analise Qualquer Imóvel em 30 Segundos',
+    homeSubtitle: 'Cole a URL do anúncio ou insira os dados manualmente. Obtenha ROI, rentabilidade, impacto fiscal e pontuação do negócio — para Brasil, Israel e EUA.',
+    startAnalysis: 'Iniciar Análise',
+    trySample: 'Experimentar Exemplo',
+    // Deal wizard
+    wizardTitle: 'Nova Análise de Negócio',
+    step1: 'Perfil do Comprador',
+    step2: 'Detalhes do Imóvel',
+    step3: 'Financiamento',
+    step4: 'Renda de Aluguel',
+    step5: 'Revisão',
+    continueBtn: 'Continuar',
+    backBtn: 'Voltar',
+    runAnalysis: '🔍 Executar Análise Completa',
+    analyzing: 'Analisando...',
+    // Buyer profile
+    buyerType: 'Tipo de Comprador',
+    individual: 'Pessoa Física',
+    company: 'Empresa',
+    country: 'País / Mercado',
+    brazil: 'Brasil 🇧🇷',
+    israel: 'Israel 🇮🇱',
+    usa: 'EUA 🇺🇸',
+    // Property
+    askingPrice: 'Preço Solicitado',
+    propertySize: 'Tamanho (m²)',
+    city: 'Cidade',
+    propertyType: 'Tipo de Imóvel',
+    apartment: 'Apartamento',
+    house: 'Casa',
+    commercial: 'Comercial',
+    // Financing
+    financingType: 'Tipo de Financiamento',
+    cash: 'À Vista',
+    mortgage: 'Financiamento',
+    downPayment: 'Entrada',
+    interestRate: 'Taxa de Juros (%)',
+    loanTerm: 'Prazo do Empréstimo (anos)',
+    // Rental
+    expectedRent: 'Aluguel Mensal Esperado',
+    occupancyRate: 'Taxa de Ocupação (%)',
+    // Results
+    dealScore: 'Pontuação do Negócio',
+    grossYield: 'Rentabilidade Bruta',
+    netRoi: 'ROI Líquido (Ano 1)',
+    paybackPeriod: 'Período de Retorno',
+    monthlyIncome: 'Renda Mensal',
+    monthlyExpenses: 'Despesas Mensais',
+    annualTax: 'Imposto Anual',
+    transferTax: 'ITBI / Imposto de Transferência',
+    vsComps: 'vs. Comparáveis',
+    aiSummary: 'Resumo da IA',
+    // Saved deals
+    noDeals: 'Nenhum negócio salvo ainda. Comece uma nova análise!',
+    deleteBtn: 'Excluir',
+    viewBtn: 'Ver',
+    // Portfolio
+    totalProperties: 'Total de Imóveis',
+    totalInvested: 'Total Investido',
+    totalMonthlyIncome: 'Renda Mensal',
+    avgYield: 'Rentabilidade Média',
+    // Compare
+    noComparisons: 'Adicione negócios para comparar',
+    // Common
+    save: 'Salvar',
+    cancel: 'Cancelar',
+    loading: 'Carregando...',
+    error: 'Algo deu errado',
+    close: 'Fechar',
+    signIn: 'Entrar',
+    signOut: 'Sair',
+    language: 'Idioma',
+    // Home screen specific
+    analyzeNewDeal: 'Analisar um Novo Negócio',
+    startFromTemplate: 'Começar por modelo',
+    viewSavedDeals: 'Ver {count} negócio salvo',
+    viewSavedDealsPlural: 'Ver {count} negócios salvos',
+    trySampleDeal: 'Experimentar exemplo (Pinheiros, SP)',
+    myDeals: 'Meus Negócios',
+    poweredBy: 'Desenvolvido por Gemini AI',
+    heroTitle: 'O negócio',
+    heroTitleAccent: 'vale a pena?',
+    heroSubtitle: 'Analise imóveis no Brasil, Israel e EUA com insights de IA, cálculos completos de impostos, comparações de mercado e projeções de Airbnb vs. aluguel de longo prazo.',
+    multiMarketSupport: '🇧🇷 🇮🇱 🇺🇸 Suporte Multi-Mercado',
+  },
+};
+
+export type TranslationKeys = keyof typeof translations.en;
+export function useT(lang: Lang) {
+  return translations[lang];
+}

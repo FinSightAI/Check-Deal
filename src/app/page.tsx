@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DealWizard } from '@/components/deal/DealWizard';
 import { DealDashboard } from '@/components/deal/DealDashboard';
 import { SavedDeals } from '@/components/deal/SavedDeals';
@@ -12,6 +12,7 @@ import { AuthButton } from '@/components/auth/AuthButton';
 import { Building2, Plus, List, TrendingUp, PieChart, Sparkles, LayoutTemplate } from 'lucide-react';
 import { buildSampleDeal } from '@/lib/utils/sampleDeal';
 import { DealTemplates } from '@/components/deal/DealTemplates';
+import { Lang, useT } from '@/lib/i18n';
 
 type View = 'home' | 'new-deal' | 'dashboard' | 'saved-deals' | 'compare' | 'portfolio';
 
@@ -19,7 +20,20 @@ export default function HomePage() {
   const [view, setView] = useState<View>('home');
   const [compareDeals, setCompareDeals] = useState<Deal[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [lang, setLang] = useState<Lang>('en');
   const { currentDeal, deals, createDeal } = useDealStore();
+  const t = useT(lang);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('wizedeal_lang') as Lang | null;
+    if (saved === 'en' || saved === 'pt') setLang(saved);
+  }, []);
+
+  const toggleLang = () => {
+    const next: Lang = lang === 'en' ? 'pt' : 'en';
+    setLang(next);
+    localStorage.setItem('wizedeal_lang', next);
+  };
 
   const handleNewDeal = () => {
     createDeal();
@@ -123,7 +137,7 @@ export default function HomePage() {
                   className="flex items-center gap-2 text-slate-300 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <List className="w-4 h-4" />
-                  My Deals ({deals.length})
+                  {t.myDeals} ({deals.length})
                 </button>
                 {deals.filter(d => d.analysis).length > 0 && (
                   <button
@@ -131,11 +145,18 @@ export default function HomePage() {
                     className="flex items-center gap-2 text-slate-300 hover:text-white text-sm px-4 py-2 rounded-lg hover:bg-white/10 transition-colors"
                   >
                     <PieChart className="w-4 h-4" />
-                    Portfolio
+                    {t.portfolio}
                   </button>
                 )}
               </>
             )}
+            <button
+              onClick={toggleLang}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold transition-all hover:opacity-80"
+              style={{ background: 'var(--surface-2,#1a1a2e)', color: '#6366f1', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              🌐 {lang === 'en' ? 'PT' : 'EN'}
+            </button>
             <AuthButton variant="dark" />
           </div>
         </div>
@@ -146,15 +167,14 @@ export default function HomePage() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-1.5 text-blue-300 text-sm mb-6">
             <TrendingUp className="w-4 h-4" />
-            Powered by Gemini AI
+            {t.poweredBy}
           </div>
           <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
-            Is the deal
-            <span className="text-blue-400"> worth it?</span>
+            {t.heroTitle}
+            <span className="text-blue-400"> {t.heroTitleAccent}</span>
           </h1>
           <p className="text-slate-400 text-xl max-w-2xl mx-auto">
-            Analyze real estate deals in Brazil, Israel, and the US with AI-powered insights, complete tax calculations,
-            market comparisons, and Airbnb vs long-term rental projections.
+            {t.heroSubtitle}
           </p>
         </div>
 
@@ -165,7 +185,7 @@ export default function HomePage() {
             className="flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg shadow-blue-500/25"
           >
             <Plus className="w-5 h-5" />
-            Analyze a New Deal
+            {t.analyzeNewDeal}
           </button>
           <div className="flex items-center gap-3 flex-wrap justify-center">
             <button
@@ -173,14 +193,16 @@ export default function HomePage() {
               className="flex items-center gap-1.5 text-slate-300 hover:text-white text-sm border border-white/20 hover:border-white/40 px-4 py-2 rounded-lg transition-colors"
             >
               <LayoutTemplate className="w-3.5 h-3.5" />
-              Start from template
+              {t.startFromTemplate}
             </button>
             {deals.length > 0 ? (
               <button
                 onClick={() => setView('saved-deals')}
                 className="text-slate-400 hover:text-white text-sm transition-colors"
               >
-                View {deals.length} saved deal{deals.length > 1 ? 's' : ''}
+                {deals.length > 1
+                  ? t.viewSavedDealsPlural.replace('{count}', String(deals.length))
+                  : t.viewSavedDeals.replace('{count}', String(deals.length))}
               </button>
             ) : (
               <button
@@ -188,7 +210,7 @@ export default function HomePage() {
                 className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 text-sm transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                Try sample deal (Pinheiros, SP)
+                {t.trySampleDeal}
               </button>
             )}
           </div>
@@ -210,7 +232,7 @@ export default function HomePage() {
 
         {/* Multi-market note */}
         <div className="mt-12 bg-green-500/10 border border-green-500/20 rounded-xl p-6 text-center">
-          <p className="text-green-300 font-medium mb-2">🇧🇷 🇮🇱 🇺🇸 Multi-Market Support</p>
+          <p className="text-green-300 font-medium mb-2">{t.multiMarketSupport}</p>
           <p className="text-slate-400 text-sm">
             <strong className="text-slate-300">Brazil:</strong> ITBI, IPTU, Carnê-Leão, GCAP · SAC & PRICE · Caixa, FGTS, MCMV &nbsp;|&nbsp;
             <strong className="text-slate-300">Israel:</strong> Mas Rechisha, Arnona, Track 2 rental tax · Bank of Israel mortgage rules · Tabu &nbsp;|&nbsp;
