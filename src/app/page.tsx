@@ -26,11 +26,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('wizedeal_lang') as Lang | null;
-    if (saved === 'en' || saved === 'pt') setLang(saved);
+    if (saved === 'en' || saved === 'pt' || saved === 'es') {
+      setLang(saved);
+    } else {
+      const bl = (navigator.language || 'en').toLowerCase();
+      if (bl.startsWith('pt')) setLang('pt');
+      else if (bl.startsWith('es')) setLang('es');
+      else setLang('en');
+    }
   }, []);
 
   const toggleLang = () => {
-    const next: Lang = lang === 'en' ? 'pt' : 'en';
+    const next: Lang = lang === 'en' ? 'pt' : lang === 'pt' ? 'es' : 'en';
     setLang(next);
     localStorage.setItem('wizedeal_lang', next);
   };
@@ -155,7 +162,7 @@ export default function HomePage() {
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold transition-all hover:opacity-80"
               style={{ background: 'var(--surface-2,#1a1a2e)', color: '#6366f1', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              🌐 {lang === 'en' ? 'PT' : 'EN'}
+              🌐 {lang === 'en' ? 'PT' : lang === 'pt' ? 'ES' : 'EN'}
             </button>
             <AuthButton variant="dark" />
           </div>
