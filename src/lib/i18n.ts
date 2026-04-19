@@ -1,4 +1,4 @@
-export type Lang = 'en' | 'pt' | 'es';
+export type Lang = 'he' | 'en' | 'pt' | 'es';
 
 export const translations = {
   en: {
@@ -192,6 +192,102 @@ export const translations = {
     heroTitleAccent: 'vale a pena?',
     heroSubtitle: 'Analise imóveis no Brasil, Israel e EUA com insights de IA, cálculos completos de impostos, comparações de mercado e projeções de Airbnb vs. aluguel de longo prazo.',
     multiMarketSupport: '🇧🇷 🇮🇱 🇺🇸 Suporte Multi-Mercado',
+  },
+  he: {
+    // Nav
+    appName: 'WizeDeal',
+    tagline: 'מנתח השקעות נדל"ן בינה מלאכותית',
+    // Main tabs / views
+    newDeal: 'ניתוח חדש',
+    savedDeals: 'עסקאות שמורות',
+    portfolio: 'תיק השקעות',
+    compare: 'השוואה',
+    templates: 'תבניות',
+    // Home page
+    homeTitle: 'נתח כל נכס תוך 30 שניות',
+    homeSubtitle: 'הדבק קישור למודעה או הזן פרטים ידנית. קבל ROI, תשואת שכירות, השפעת מס וציון עסקה — לברזיל, ישראל וארה"ב.',
+    startAnalysis: 'התחל ניתוח',
+    trySample: 'נסה עסקה לדוגמה',
+    // Deal wizard
+    wizardTitle: 'ניתוח עסקה חדשה',
+    step1: 'פרופיל קונה',
+    step2: 'פרטי הנכס',
+    step3: 'מימון',
+    step4: 'הכנסת שכירות',
+    step5: 'סקירה',
+    continueBtn: 'המשך',
+    backBtn: 'חזרה',
+    runAnalysis: '🔍 הרץ ניתוח מלא',
+    analyzing: 'מנתח...',
+    // Buyer profile
+    buyerType: 'סוג קונה',
+    individual: 'יחיד',
+    company: 'חברה',
+    country: 'מדינה / שוק',
+    brazil: 'ברזיל 🇧🇷',
+    israel: 'ישראל 🇮🇱',
+    usa: 'ארה"ב 🇺🇸',
+    // Property
+    askingPrice: 'מחיר מבוקש',
+    propertySize: 'גודל (מ"ר)',
+    city: 'עיר',
+    propertyType: 'סוג נכס',
+    apartment: 'דירה',
+    house: 'בית',
+    commercial: 'מסחרי',
+    // Financing
+    financingType: 'סוג מימון',
+    cash: 'מזומן',
+    mortgage: 'משכנתא',
+    downPayment: 'הון עצמי',
+    interestRate: 'ריבית (%)',
+    loanTerm: 'תקופת הלוואה (שנים)',
+    // Rental
+    expectedRent: 'שכירות חודשית צפויה',
+    occupancyRate: 'אחוז תפוסה (%)',
+    // Results
+    dealScore: 'ציון עסקה',
+    grossYield: 'תשואה גולמית',
+    netRoi: 'ROI נטו (שנה 1)',
+    paybackPeriod: 'תקופת החזר',
+    monthlyIncome: 'הכנסה חודשית',
+    monthlyExpenses: 'הוצאות חודשיות',
+    annualTax: 'מס שנתי',
+    transferTax: 'מס רכישה',
+    vsComps: 'מול נכסים דומים',
+    aiSummary: 'סיכום AI',
+    // Saved deals
+    noDeals: 'אין עסקאות שמורות. התחל ניתוח חדש!',
+    deleteBtn: 'מחק',
+    viewBtn: 'צפה',
+    // Portfolio
+    totalProperties: 'סה"כ נכסים',
+    totalInvested: 'סה"כ השקעה',
+    totalMonthlyIncome: 'הכנסה חודשית',
+    avgYield: 'תשואה ממוצעת',
+    // Compare
+    noComparisons: 'הוסף עסקאות להשוואה',
+    // Common
+    save: 'שמור',
+    cancel: 'ביטול',
+    loading: 'טוען...',
+    error: 'משהו השתבש',
+    close: 'סגור',
+    signIn: 'כניסה',
+    signOut: 'יציאה',
+    language: 'שפה',
+    // Home screen specific
+    analyzeNewDeal: 'נתח עסקה חדשה',
+    startFromTemplate: 'התחל מתבנית',
+    viewSavedDeals: 'צפה ב-{count} עסקה שמורה',
+    viewSavedDealsPlural: 'צפה ב-{count} עסקאות שמורות',
+    trySampleDeal: 'נסה עסקה לדוגמה (פינייירוס, SP)',
+    myDeals: 'העסקאות שלי',
+    poweredBy: 'מופעל על ידי Gemini AI',
+    heroTitle: 'האם העסקה',
+    heroTitleAccent: 'שווה את זה?',
+    heroSubtitle: 'נתח נדל"ן בברזיל, ישראל וארה"ב עם תובנות AI, חישובי מס מלאים, השוואות שוק ותחזיות Airbnb מול שכירות ארוכת טווח.',
+    multiMarketSupport: '🇧🇷 🇮🇱 🇺🇸 תמיכה במספר שווקים',
   },
   es: {
     // Nav

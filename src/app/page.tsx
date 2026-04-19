@@ -26,18 +26,24 @@ export default function HomePage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('wizedeal_lang') as Lang | null;
-    if (saved === 'en' || saved === 'pt' || saved === 'es') {
+    if (saved === 'he' || saved === 'en' || saved === 'pt' || saved === 'es') {
       setLang(saved);
     } else {
       const bl = (navigator.language || 'en').toLowerCase();
+      // Hebrew not auto-detected — user must select manually
       if (bl.startsWith('pt')) setLang('pt');
       else if (bl.startsWith('es')) setLang('es');
       else setLang('en');
     }
   }, []);
 
+  useEffect(() => {
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const toggleLang = () => {
-    const next: Lang = lang === 'en' ? 'pt' : lang === 'pt' ? 'es' : 'en';
+    const next: Lang = lang === 'he' ? 'en' : lang === 'en' ? 'pt' : lang === 'pt' ? 'es' : 'he';
     setLang(next);
     localStorage.setItem('wizedeal_lang', next);
   };
@@ -162,7 +168,7 @@ export default function HomePage() {
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold transition-all hover:opacity-80"
               style={{ background: 'var(--surface-2,#1a1a2e)', color: '#6366f1', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              🌐 {lang === 'en' ? 'PT' : lang === 'pt' ? 'ES' : 'EN'}
+              🌐 {lang === 'he' ? 'EN' : lang === 'en' ? 'PT' : lang === 'pt' ? 'ES' : 'עב'}
             </button>
             <AuthButton variant="dark" />
           </div>
