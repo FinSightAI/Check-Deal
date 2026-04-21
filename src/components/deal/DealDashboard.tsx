@@ -74,6 +74,7 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [wizelifeCopied, setWizelifeCopied] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -140,6 +141,52 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
     ].filter(Boolean).join('\n');
 
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const buildDealSummary = (): string => {
+    if (!deal.analysis) return '';
+    const a = deal.analysis;
+    const price = deal.property.agreedPrice || deal.property.askingPrice;
+    const currency = deal.property.currency ?? 'BRL';
+    const sym = currency === 'ILS' ? '₪' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : 'R$';
+    const monthlyRent = deal.rentalAssumptions.ltr.monthlyRent;
+    const cf1Monthly = Math.round((a.cashFlows[0]?.cashFlow ?? 0) / 12);
+    const yr1 = a.returns.projections.find(p => p.years === 1);
+    const location = [deal.property.neighborhood, deal.property.city].filter(Boolean).join(', ');
+    return [
+      `=== WizeDeal Analysis ===`,
+      `Property: ${deal.property.rooms}BR ${deal.property.propertyType}, ${deal.property.sizeSqm}m², ${location}`,
+      `Price: ${sym}${price.toLocaleString()}`,
+      monthlyRent > 0 ? `Monthly rent: ${sym}${monthlyRent.toLocaleString()}` : '',
+      `Gross yield: ${a.returns.grossYield.toFixed(1)}%`,
+      `Net yield: ${a.returns.netYield.toFixed(1)}%`,
+      `Cap rate: ${a.returns.capRate.toFixed(1)}%`,
+      `Cash-on-cash: ${a.returns.cashOnCashReturn.toFixed(1)}%`,
+      yr1 ? `Net ROI (Year 1): ${yr1.annualizedReturn.toFixed(1)}%` : '',
+      `Monthly cash flow (Y1): ${cf1Monthly >= 0 ? '+' : ''}${sym}${Math.abs(cf1Monthly).toLocaleString()}`,
+      `Deal score: ${a.dealScore.total}/100 (${a.dealScore.rating})`,
+      `Recommendation: ${a.dealScore.recommendation}`,
+      deal.financing.financingType !== 'cash'
+        ? `Financing: ${deal.financing.downPaymentPercent}% down, ${deal.financing.interestRate}% rate`
+        : `Financing: Cash purchase`,
+    ].filter(Boolean).join('\n');
+  };
+
+  const handleCopyForWizeLife = async () => {
+    const summary = buildDealSummary();
+    if (!summary) return;
+    try {
+      await navigator.clipboard.writeText(summary);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = summary;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setWizelifeCopied(true);
+    setTimeout(() => setWizelifeCopied(false), 2000);
   };
 
   const { analysis } = deal;
@@ -270,6 +317,11 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
               <Download className="w-4 h-4" /> PDF
             </button>
 
+            <button onClick={handleCopyForWizeLife}
+              className={`flex items-center gap-1.5 text-sm border px-3 py-2 rounded-lg transition-colors ${wizelifeCopied ? 'border-violet-400 bg-violet-50 text-violet-700' : 'border-violet-300 text-violet-600 hover:bg-violet-50'}`}>
+              📋 {wizelifeCopied ? '✓ Copied!' : 'WizeLife AI'}
+            </button>
+
             <AuthButton variant="light" />
 
             {!readOnly && (
@@ -352,6 +404,10 @@ export function DealDashboard({ deal, onNewDeal, onBack, readOnly }: Props) {
             <button onClick={() => { exportDealToPDF(deal); setShowMobileMenu(false); }}
               className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-700">
               <Download className="w-4 h-4" /> PDF
+            </button>
+            <button onClick={() => { handleCopyForWizeLife(); setShowMobileMenu(false); }}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-violet-200 text-sm text-violet-700">
+              📋 {wizelifeCopied ? '✓ Copied!' : 'WizeLife AI'}
             </button>
           </div>
         </div>
