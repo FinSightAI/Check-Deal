@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseEnabled } from '@/lib/supabase/client';
 
 // GET /api/shared-deals/[token] — fetch shared deal
-export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
   if (!supabaseEnabled) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
   }
@@ -10,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
   const { data, error } = await supabase
     .from('shared_deals')
     .select('deal_data, allow_edit, created_at')
-    .eq('token', params.token)
+    .eq('token', token)
     .single();
 
   if (error || !data) {
@@ -21,7 +22,8 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
 }
 
 // PUT /api/shared-deals/[token] — update shared deal (requires PIN if set)
-export async function PUT(req: NextRequest, { params }: { params: { token: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
   if (!supabaseEnabled) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
   }
@@ -32,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: { params: { token: strin
   const { data: row, error: fetchError } = await supabase
     .from('shared_deals')
     .select('pin, allow_edit')
-    .eq('token', params.token)
+    .eq('token', token)
     .single();
 
   if (fetchError || !row) {
@@ -48,7 +50,7 @@ export async function PUT(req: NextRequest, { params }: { params: { token: strin
   const { error } = await supabase
     .from('shared_deals')
     .update({ deal_data: deal, updated_at: new Date().toISOString() })
-    .eq('token', params.token);
+    .eq('token', token);
 
   if (error) {
     console.error('Supabase update error:', error.message);
