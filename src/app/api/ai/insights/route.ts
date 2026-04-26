@@ -167,7 +167,7 @@ Respond with this exact JSON structure (no markdown, no code fences, raw JSON on
   } catch (error) {
     console.error('AI insights error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'AI analysis failed' },
+      { error: 'AI analysis failed' },
       { status: 500 }
     );
   }

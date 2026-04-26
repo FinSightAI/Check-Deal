@@ -75,7 +75,7 @@ Use real market knowledge. Be specific for well-known areas. Provide realistic r
     return NextResponse.json({ marketData: data });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed' },
+      { error: 'Market data analysis failed' },
       { status: 500 }
     );
   }

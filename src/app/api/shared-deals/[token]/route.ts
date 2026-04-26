@@ -51,7 +51,8 @@ export async function PUT(req: NextRequest, { params }: { params: { token: strin
     .eq('token', params.token);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Supabase update error:', error.message);
+    return NextResponse.json({ error: 'Failed to update shared deal' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

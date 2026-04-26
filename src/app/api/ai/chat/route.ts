@@ -111,7 +111,7 @@ For state-specific questions: FL has no income tax, TX has no income tax, NY/CA 
   } catch (error) {
     console.error('Chat error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Chat failed' }),
+      JSON.stringify({ error: 'Chat failed' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

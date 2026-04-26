@@ -88,7 +88,7 @@ ${seasonalityNote}`;
     return NextResponse.json({ estimate: data });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed' },
+      { error: 'Rental estimate failed' },
       { status: 500 }
     );
   }
