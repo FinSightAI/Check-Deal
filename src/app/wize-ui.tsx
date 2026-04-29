@@ -4,10 +4,18 @@ import { useEffect, useState } from 'react';
 export function WizeOnboarding() {
   const [show, setShow] = useState(false);
   const OB_KEY = 'wl_ob_deal';
-  const t = { title:'Welcome to WizeDeal', sub:'Analyze real estate deals with AI', color:'#8b5cf6',
-    features:['🏠 AI-powered ROI, yield & cash flow calculator','📊 Rental estimates & live market data','🤖 Deal scoring with personalized AI insights'],
-    btn:'Get started →', nosee:"Don't show on startup" };
-  useEffect(() => { if (!localStorage.getItem(OB_KEY)) setShow(true); }, []);
+  const OB: Record<string, {title:string,sub:string,features:string[],btn:string,nosee:string}> = {
+    en: { title:'Welcome to WizeDeal', sub:'Analyze real estate deals with AI', features:['🏠 AI-powered ROI, yield & cash flow calculator','📊 Rental estimates & live market data','🤖 Deal scoring with personalized AI insights'], btn:'Get started →', nosee:"Don't show on startup" },
+    he: { title:'ברוך הבא ל-WizeDeal', sub:'נתח עסקאות נדל"ן עם AI', features:['🏠 מחשבון ROI, תשואה ותזרים מזומנים','📊 הערכות שכירות ונתוני שוק חיים','🤖 ניקוד עסקה עם תובנות AI אישיות'], btn:'בואו נתחיל ←', nosee:'אל תציג שוב בהפעלה' },
+    pt: { title:'Bem-vindo ao WizeDeal', sub:'Analise negócios imobiliários com IA', features:['🏠 Calculadora de ROI, rendimento e fluxo de caixa','📊 Estimativas de aluguel e dados de mercado ao vivo','🤖 Pontuação de negócios com insights de IA'], btn:'Vamos lá →', nosee:'Não mostrar na inicialização' },
+    es: { title:'Bienvenido a WizeDeal', sub:'Analiza negocios inmobiliarios con IA', features:['🏠 Calculadora de ROI, rendimiento y flujo de caja','📊 Estimaciones de alquiler y datos de mercado en vivo','🤖 Puntuación de negocios con insights de IA'], btn:'Empecemos →', nosee:'No mostrar al iniciar' },
+  };
+  const [t, setT] = useState(OB.en);
+  useEffect(() => {
+    const lang = localStorage.getItem('wl_lang') || 'en';
+    setT(OB[lang] || OB.en);
+    if (!localStorage.getItem(OB_KEY)) setShow(true);
+  }, []);
   if (!show) return (
     <button onClick={() => setShow(true)} style={{position:'fixed',bottom:20,left:20,zIndex:9997,width:32,height:32,borderRadius:'50%',background:'rgba(139,92,246,0.15)',border:'1px solid rgba(139,92,246,0.4)',color:'#8b5cf6',fontSize:14,fontWeight:700,cursor:'pointer',lineHeight:1}}>?</button>
   );
@@ -22,7 +30,7 @@ export function WizeOnboarding() {
         <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
           {t.features.map((f,i) => <div key={i} style={{fontSize:14,color:'#94a3b8'}}>{f}</div>)}
         </div>
-        <button onClick={() => { localStorage.setItem(OB_KEY,'1'); setShow(false); }} style={{width:'100%',padding:12,borderRadius:10,background:t.color,border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{t.btn}</button>
+        <button onClick={() => { localStorage.setItem(OB_KEY,'1'); setShow(false); }} style={{width:'100%',padding:12,borderRadius:10,background:'#8b5cf6',border:'none',color:'#fff',fontSize:14,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{t.btn}</button>
         <label style={{display:'flex',alignItems:'center',gap:8,marginTop:14,fontSize:12,color:'#4b5563',cursor:'pointer'}}>
           <input type="checkbox" onChange={e => { if(e.target.checked) localStorage.setItem(OB_KEY,'1'); else localStorage.removeItem(OB_KEY); }}/> {t.nosee}
         </label>
