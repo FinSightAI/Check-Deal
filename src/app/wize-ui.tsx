@@ -1,6 +1,44 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+const LANGS = ['en','he','pt','es'] as const;
+type Lang = typeof LANGS[number];
+
+const pillStyle = (active: boolean, color: string): React.CSSProperties => ({
+  background: active ? color + '33' : 'none',
+  border: 'none',
+  color: active ? color : '#6b7280',
+  padding: '3px 7px',
+  borderRadius: 6,
+  fontSize: 11,
+  fontWeight: 700,
+  cursor: 'pointer',
+  transition: 'all .15s',
+  fontFamily: 'inherit',
+  letterSpacing: '.4px',
+});
+
+export function LangSwitcher({ color }: { color: string }) {
+  const [lang, setLangState] = useState<Lang>('en');
+  useEffect(() => {
+    setLangState((localStorage.getItem('wl_lang') as Lang) || 'en');
+  }, []);
+  function pick(l: Lang) {
+    localStorage.setItem('wl_lang', l);
+    setLangState(l);
+    window.location.reload();
+  }
+  return (
+    <div style={{display:'flex',gap:2,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:3}}>
+      {LANGS.map(l => (
+        <button key={l} style={pillStyle(lang===l, color)} onClick={() => pick(l)}>
+          {l === 'he' ? 'עב' : l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function WizeOnboarding() {
   const [show, setShow] = useState(false);
   const OB_KEY = 'wl_ob_deal';
@@ -44,10 +82,8 @@ export function WizeBar() {
   useEffect(() => {
     const l = localStorage.getItem('wl_lang') || 'en';
     const labels: Record<string, string> = {
-      he: '← כל הכלים',
-      en: '← All Tools',
-      pt: '← Todas as ferramentas',
-      es: '← Todas las herramientas',
+      he: '← כל הכלים', en: '← All Tools',
+      pt: '← Todas as ferramentas', es: '← Todas las herramientas',
     };
     setLabel(labels[l] || '← All Tools');
   }, []);
@@ -58,7 +94,10 @@ export function WizeBar() {
         <span style={{fontSize:13,fontWeight:700,color:'#eef2ff',letterSpacing:'-0.3px'}}>WizeLife</span>
         <span style={{fontSize:11,fontWeight:600,color:'#8b5cf6',background:'rgba(139,92,246,0.12)',padding:'2px 8px',borderRadius:99,lineHeight:1.4}}>WizeDeal</span>
       </a>
-      <a href="https://finsightai.github.io/wizelife/dashboard.html" style={{fontSize:12,color:'#7b88ad',textDecoration:'none',fontWeight:500,whiteSpace:'nowrap'}}>{label}</a>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <LangSwitcher color="#8b5cf6" />
+        <a href="https://finsightai.github.io/wizelife/dashboard.html" style={{fontSize:12,color:'#7b88ad',textDecoration:'none',fontWeight:500,whiteSpace:'nowrap'}}>{label}</a>
+      </div>
     </div>
   );
 }
